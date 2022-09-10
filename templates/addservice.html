@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Service <b>{{cust.custname}}</b></h1>
+<h3>{{cust.custadd}}</h3>
+
+<div class='container'>
+    <form method='POST'>
+    {{form.hidden_tag()}}
+    {{form.tanggal.label}}{{form.tanggal(class="form-control")}}
+    {{form.keluhan.label}}{{form.keluhan(class="form-control")}}
+    {{form.tindakan.label}}{{form.tindakan(class="form-control")}}
+    {{form.hasil.label}}{{form.hasil(class="form-control")}}
+    {{form.dokumentasi.label}}{{form.dokumentasi(class="form-control", placeholder="G drive url")}}
+    {{form.submit(class="btn btn-primary")}}
+</form>
+</div>
+<br>
+<div class='container'>
+    <table class="table table-striped table-hover table-sm">
+    <tr>
+        <!--<th>ID</th>-->
+        <th>Service Date</th>
+        <th>Keluhan</th>
+        <th>Tindakan</th>
+        <th>Hasil</th>
+        <th>Dokumentasi</th>
+        <th></th>
+    </tr>
+    {% for x in df %}
+    <tr>
+        <!--<td>{{x.id}}</td>-->
+        <td>{{x.servicedate}}</td>
+        <td>{{x.keluhan}}</td>
+        <td>{{x.tindakan}}</td>
+        <td>{{x.hasil}}</td>
+        {% if x.dokumentasi=="" %}
+        <td></td>
+        {% else %}
+        <td><a href="{{x.dokumentasi}}" target="_blank" rel="noopener noreferrer">View</a></td>
+        {% endif %}
+
+        <td>
+            {% if session['user']=='admin' %}
+            <a class="btn btn-outline-danger btn-sm" href="{{url_for('delservice',sid=x.id,cid=cust.id)}}" role="button">Hapus</a>
+            <a class="btn btn-outline-primary btn-sm" href="{{url_for('editservice',sid=x.id)}}" role="button">Edit</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+
+
+{% endblock %}

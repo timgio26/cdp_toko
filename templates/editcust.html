@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Edit Customer</h1>
+
+<div class='container'>
+    <form method="POST">
+  {{form.hidden_tag()}}
+  {{form.nama.label}}{{form.nama(class="form-control")}}
+  {{form.alamat.label}}{{form.alamat(class="form-control")}}
+  {{form.tlp.label}}{{form.tlp(class="form-control")}}
+  {{form.date.label}}{{form.date(class="form-control")}}
+  {{form.submit(class="btn btn-primary")}}
+  </form>
+
+</div>
+
+
+
+
+{% endblock %}

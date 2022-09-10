@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Customer</h1>
+
+<div class='container-sm'>
+
+<form method="POST">
+    {{form.hidden_tag()}}
+    {{form.nama.label}}{{form.nama(class="form-control")}}
+    {{form.alamat.label}}{{form.alamat(class="form-control")}}
+    {{form.tlp.label}}{{form.tlp(class="form-control")}}
+    {{form.date.label}}{{form.date(class="form-control")}}
+    {{form.submit(class="btn btn-primary")}}
+</form>
+</div>
+<br>
+
+<div class='container'>
+    <table id="data" class="table table-striped table-hover table-sm">
+    <thead>
+        <tr>
+            <!--<th>ID</th>-->
+            <th>Nama</th>
+            <th>Alamat</th>
+            <th>Telepon</th>
+            <th>Join Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for x in df %}
+            <tr>
+            <!--<td>{{loop.index}}</td>-->
+            <td>{{x.custname}}</td>
+            <td>{{x.custadd}}</td>
+            <td>{{x.custtel}}</td>
+            <td>{{x.custjoin}}</td>
+            <th>
+                <a class="btn btn-primary btn-sm" href="{{url_for('tambahservice',cid=x.id)}}" role="button">Service</a>
+                {% if session['user']=='admin' %}
+                <a class="btn btn-primary btn-sm" href="{{url_for('editcust',cid=x.id)}}" role="button">Edit</a>
+                <a class="btn btn-danger btn-sm" href="{{url_for('deletecust',cid=x.id)}}" role="button">Delete</a>
+                {% endif %}
+            </th>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+    <!--{% if prev_url %}-->
+    <!--<a class="btn btn-outline-primary btn-sm" href="{{ prev_url }}">Previous</a>-->
+    <!--{% endif %}-->
+    <!--{% if next_url %}-->
+    <!--<a class="btn btn-outline-primary btn-sm" href="{{ next_url }}">Next</a>-->
+    <!--{% endif %}-->
+
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable();
+    });
+  </script>
+{% endblock %}
+
+

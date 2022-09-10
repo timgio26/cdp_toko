@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Edit Service</h3>
+
+<div class='container'>
+    <form method='POST'>
+    {{form.hidden_tag()}}
+    {{form.tanggal.label}}{{form.tanggal(class="form-control")}}
+    {{form.keluhan.label}}{{form.keluhan(class="form-control")}}
+    {{form.tindakan.label}}{{form.tindakan(class="form-control")}}
+    {{form.hasil.label}}{{form.hasil(class="form-control")}}
+    {{form.dokumentasi.label}}{{form.dokumentasi(class="form-control")}}
+    {{form.submit(class="btn btn-primary")}}
+</form>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Data</h1>
+<div class='container'>
+    <ul>
+        <li><a href="{{url_for('downloaddata',tbl='dbcust')}}">Download Data Customer</a></li>
+        <li><a href="{{url_for('downloaddata',tbl='dbservice')}}">Download Data Service</a></li>
+    </ul>
+
+</div>
+
+
+
+
+{% endblock %}

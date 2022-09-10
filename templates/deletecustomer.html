@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='container'>
+    <h3>Hapus data customer: <b>{{cust.custname}}</b> ?</h3>
+<form method="POST">
+  {{form.hidden_tag()}}
+
+  {{form.submit(class="btn btn-danger")}}
+
+</form>
+
+</div>
+
+
+
+
+
+{% endblock %}
