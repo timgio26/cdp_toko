@@ -15,12 +15,13 @@ import pandas as pd
 import json
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'you-will-never-guess'
-SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://timgio26:bumimarinaemas@timgio26.mysql.pythonanywhere-services.com/timgio26$asdasas"
-app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
-app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["ROW_PER_PAGE"] = 15
+# app.config['SECRET_KEY'] = 'you-will-never-guess'
+# SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://timgio26:bumimarinaemas@timgio26.mysql.pythonanywhere-services.com/timgio26$asdasas"
+# app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+# app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
+# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# app.config["ROW_PER_PAGE"] = 15
+app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 bootstrap = Bootstrap(app)
