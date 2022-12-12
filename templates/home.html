@@ -1,13 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>Home</h1>
+<!-- <h1>Home</h1> -->
 
-<div class='container'>
-    <img src="{{url_for('static', filename='Untitled design(6).jpg')}}" class="img-fluid">
-    <!--<h1>Home</h1>-->
-    <!--<div class="centered"><h1>Setia Purindo</h1></div>-->
+<div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="{{url_for('static', filename='Untitled design(6).jpg')}}" class="d-block w-100" alt="...">
+        <div class="container">
+            <div class="carousel-caption text-start">
+              <h1>Setia Purindo</h1>
+              <p>Home Water Filtration & Purification Services</p>
+              <!-- <p><a class="btn btn-sm btn-primary" href="#">Contact Us</a></p> -->
+            </div>
+        </div>
+      </div>
+      <div class="carousel-item">
+        <img src="{{url_for('static', filename='Untitled design(7).jpg')}}" class="d-block w-100" alt="...">
+        <div class="container">
+            <div class="carousel-caption text-start">
+              <h1>Our Product</h1>
+              <p>Find selection of our product suitable for your need</p>
+              <!-- <p><a class="btn btn-sm btn-primary" href="#">Contact Us</a></p> -->
+            </div>
+        </div>
+      </div>
+      <div class="carousel-item">
+        <img src="https://picsum.photos/1000/250" class="d-block w-100" alt="...">
+        <div class="carousel-caption text-start">
+            <h1>Our Customer</h1>
+            <p>Thrusted since 2010, hear from our happy customer</p>
+            <!-- <p><a class="btn btn-sm btn-primary" href="#">Contact Us</a></p> -->
+          </div>
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
 </div>
+<h3>Shop By Categories</h3>
 
 
 {% endblock %}
