@@ -93,6 +93,7 @@ class restrialapinew(Resource):
         # df=dbtrialapi.query.all()
         engine = create_engine(SQLALCHEMY_DATABASE_URI)
         df = pd.read_sql_query("SELECT * FROM dbtrialapi", con=engine)
+        engine.dispose()
         df=df.to_json()
         df=json.loads(df)
         # print(df.to_dict())
@@ -363,6 +364,7 @@ def downloaddata(tbl):
             fname="data_service"
         engine = create_engine(SQLALCHEMY_DATABASE_URI)
         df = pd.read_sql_query("SELECT * FROM {}".format(tbl), con=engine)
+        engine.dispose()
         resp = make_response(df.to_csv(index=False))
         resp.headers["Content-Disposition"] = "attachment; filename={}.csv".format(fname)
         resp.headers["Content-Type"] = "text/csv"
