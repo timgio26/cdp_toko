@@ -1,6 +1,5 @@
 migrations/
 __pycache__/
 venv/
-config.py
 *.sqlite
 *pyc
