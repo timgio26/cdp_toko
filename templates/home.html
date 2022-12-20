@@ -43,7 +43,30 @@
       <span class="visually-hidden">Next</span>
     </button>
 </div>
-<h3>Shop By Categories</h3>
+<div class="container">
+  <div class="row g-4 py-5 row-cols-1 row-cols-lg-4">
+    <div class="col_rec">
+      <img src="{{url_for('static', filename='rating.png')}}" class="img_rec" alt="...">
+      <br>
+      <h4>10 Years Experience</h4>
+    </div>
+    <div class="col_rec">
+      <img src="{{url_for('static', filename='customer-service.png')}}" class="img_rec" alt="...">
+      <br>
+      <h4>After Sales Services</h4>
+    </div>
+    <div class="col_rec">
+      <img src="{{url_for('static', filename='insurance.png')}}" class="img_rec" alt="...">
+      <br>
+      <h4>Money Back Guarantee</h4>
+    </div>
+    <div class="col_rec">
+      <img src="{{url_for('static', filename='lab.png')}}" class="img_rec" alt="...">
+      <br>
+      <h4>Free Lab Test</h4>
+    </div>
+  </div>
+</div>
 
 
 {% endblock %}
