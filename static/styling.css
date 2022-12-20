@@ -6,3 +6,10 @@ h3{
     text-align:center;
     padding-top:10px;
 }
+.img_rec{
+    width: 100px;
+}
+.col_rec{
+    text-align: center;
+    padding: 25px;
+}
