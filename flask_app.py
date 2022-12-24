@@ -51,28 +51,18 @@ class dbservice(db.Model):
     hasil=db.Column(db.Text)
     dokumentasi=db.Column(db.String(120))
 
+class dbprod(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # sku = db.Column(db.String(64))
+    prodname = db.Column(db.String(64))
+    imgurl = db.Column(db.String(64))
+    proddesc = db.Column(db.Text)
+
 class dbtrialapi(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     nama=db.Column(db.String(120))
     kota=db.Column(db.String(120))
 
-    # def serialize(self):
-    #     return {
-    #         'id':self.id,
-    #         'nama':self.nama
-    #         }
-
-# class restrialapi(Resource):
-#     def post(self,inpnama):
-#         newdata=dbtrialapi(nama=inpnama)
-#         db.session.add(newdata)
-#         db.session.commit()
-#         return {'status':'added'}
-#     def delete(self,inpnama):
-#         deldata=dbtrialapi.query.filter_by(nama=inpnama).first()
-#         db.session.delete(deldata)
-#         db.session.commit()
-#         return {'status':'deleted'}
 
 class restrialapinew(Resource):
     def post(self):
@@ -372,10 +362,15 @@ def downloaddata(tbl):
     else:
         return redirect(url_for('index'))
 
+@app.route('/addprod',methods=['GET','POST'])
+def addprod():
+    return render_template('addprod.html')
+
 @app.route('/trialapi',methods=['GET','POST'])
 def trialapi():
     df=dbtrialapi.query.all()
     return render_template('trialapi.html',df=df)
+
 
 
 if __name__ =='__main__':
