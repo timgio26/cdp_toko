@@ -50,9 +50,15 @@ h3{
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
-    background-color: rgb(198, 198, 198);
+    background-color:whitesmoke;
     padding: 0px;
     justify-content: center;
+}
+
+.modqty:hover{
+    border-color: lightblue;
+    border-width: 2px;
+    border-style: solid;
 }
 
 .colcart{
