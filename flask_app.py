@@ -1,7 +1,7 @@
 
 # A very simple Flask Hello World app for you to get started with...
 
-from flask import Flask,render_template,url_for,redirect,session,request,make_response
+from flask import Flask,render_template,url_for,redirect,session,request,make_response,jsonify
 from flask_wtf import FlaskForm
 from wtforms import StringField,SubmitField,PasswordField,TextField
 from wtforms.fields.html5 import DateField
@@ -11,8 +11,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from sqlalchemy import desc,create_engine
 from flask_restful import Resource,Api
+from werkzeug.utils import secure_filename
 import pandas as pd
-import json
+import json,os
 
 app = Flask(__name__)
 # app.config['SECRET_KEY'] = 'you-will-never-guess'
@@ -35,6 +36,12 @@ class usercdp(db.Model):
     username=db.Column(db.String(60),unique=True)
     password=db.Column(db.String(60))
 
+class mycart(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    username=db.Column(db.String(60))
+    itemid=db.Column(db.Integer)
+    itemqty=db.Column(db.Integer)
+
 class dbcust(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     custname=db.Column(db.String(60))
@@ -55,6 +62,8 @@ class dbprod(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # sku = db.Column(db.String(64))
     prodname = db.Column(db.String(64))
+    prodprice=db.Column(db.Integer)
+    prodpricedisc=db.Column(db.Integer)
     imgurl = db.Column(db.String(64))
     proddesc = db.Column(db.Text)
 
@@ -81,7 +90,7 @@ class restrialapinew(Resource):
         return {'status':'deleted'}
     def get(self):
         # df=dbtrialapi.query.all()
-        engine = create_engine(SQLALCHEMY_DATABASE_URI)
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         df = pd.read_sql_query("SELECT * FROM dbtrialapi", con=engine)
         engine.dispose()
         df=df.to_json()
@@ -153,7 +162,10 @@ class delcustform(FlaskForm):
 
 @app.route('/',methods=['GET','POST'])
 def index():
-    return render_template('home.html')
+    print(session.get('user', None))
+    df=dbprod.query.all()
+    df2=mycart.query.filter_by(username=session.get('user', None))
+    return render_template('home.html',df=df,df2=df2)
 
 @app.route('/addcustlama',methods=['GET','POST'])
 def tambahcustomerlama():
@@ -352,7 +364,7 @@ def downloaddata(tbl):
             fname="data_customer"
         else:
             fname="data_service"
-        engine = create_engine(SQLALCHEMY_DATABASE_URI)
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         df = pd.read_sql_query("SELECT * FROM {}".format(tbl), con=engine)
         engine.dispose()
         resp = make_response(df.to_csv(index=False))
@@ -364,14 +376,99 @@ def downloaddata(tbl):
 
 @app.route('/addprod',methods=['GET','POST'])
 def addprod():
+    if request.method=='POST':
+        f=request.files['formHero']
+        filedir=os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(f.filename))
+        if f:
+            f.save(filedir)
+        newprod=dbprod(prodname=request.form['formNama'],prodprice=request.form['formHarga'],prodpricedisc=request.form['formDisc'],proddesc=request.form['editordata'],imgurl=filedir)
+        db.session.add(newprod)
+        db.session.commit()
+        return redirect (url_for('allprod'))
     return render_template('addprod.html')
+
+@app.route('/allprod',methods=['GET','POST'])
+def allprod():
+    df=dbprod.query.all()
+    return render_template('allprod.html',df=df)
 
 @app.route('/trialapi',methods=['GET','POST'])
 def trialapi():
     df=dbtrialapi.query.all()
     return render_template('trialapi.html',df=df)
 
+@app.route('/deltrialapi/<id>',methods=['GET','POST'])
+def deltrialapi(id):
+    itemdel=dbtrialapi.query.get(id)
+    db.session.delete(itemdel)
+    db.session.commit()
+    return redirect(url_for('trialapi'))
 
+@app.route('/delcartitem/<id>',methods=['POST'])
+def delcartitem(id):
+    if session.get('user', None):
+        itemdel=mycart.query.get(id)
+        db.session.delete(itemdel)
+        db.session.commit()
+        curuser=session.get('user', None)
+        return jsonify({'curuser':curuser})
+    return ("error please refresh")
+
+@app.route('/addajax',methods=['POST'])
+def addajax():
+    itemdel=mycart.query.filter_by(username=request.form.get('username'),itemid=request.form.get('itemid')).first()
+    if itemdel:
+        # print(itemdel.id)
+        item=mycart.query.get(itemdel.id)
+        item.itemqty=item.itemqty+1
+        db.session.add(item)
+        db.session.commit()
+    else:
+        newdata=mycart(username=request.form.get('username'),itemid=request.form.get('itemid'),itemqty=request.form.get('itemqty'))
+        db.session.add(newdata)
+        db.session.commit()
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    df = pd.read_sql_query(f"SELECT * FROM mycart WHERE mycart.username = '{request.form.get('username')}'", con=engine)
+    engine.dispose()
+    dfjson=df.to_json(orient="table")
+    return jsonify({'mycart':dfjson})
+
+@app.route('/updateCart',methods=['GET'])
+def updateCart():
+    username=request.args.get('username')
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    df = pd.read_sql_query(f"SELECT * FROM mycart WHERE mycart.username = '{username}'", con=engine)
+    engine.dispose()
+    dfjson=json.loads(df.to_json(orient="records"))
+    print(type(dfjson))
+    return jsonify({'mycart':dfjson})
+
+@app.route('/addCartitem',methods=['POST'])
+def addCartitem():
+    cartitemid=request.form.get('itemid')
+    cal=request.form.get('cal')
+    if cal=='1':
+        print('masuk plus')
+        item=mycart.query.get(cartitemid)
+        item.itemqty=item.itemqty+1
+        db.session.add(item)
+        db.session.commit()
+        curuser=session.get('user', None)
+        return jsonify({'curuser':curuser})
+    else:
+        print('masuk min')
+        item=mycart.query.get(cartitemid)
+        if item.itemqty==1:
+            db.session.delete(item)
+            db.session.commit()
+            # curuser=session.get('user', None)
+            # return jsonify({'curuser':curuser})
+        else:
+            item.itemqty=item.itemqty-1
+            db.session.add(item)
+            db.session.commit()
+        curuser=session.get('user', None)
+        return jsonify({'curuser':curuser})
 
 if __name__ =='__main__':
     app.run(debug=True)

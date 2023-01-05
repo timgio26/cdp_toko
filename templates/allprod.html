@@ -1,0 +1,32 @@
+{% extends 'base copy.html' %}
+{% block content %}
+
+<div class="container">
+    <h2>All Produk</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama Produk</th>
+                <th>Harga Produk</th>
+                <th>Harga Diskon</th>
+                <th>img url</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in df %}
+            <tr>
+                <td>{{item.id}}</td>
+                <td>{{item.prodname}}</td>
+                <td>{{item.prodprice}}</td>
+                <td>{{item.prodpricedisc}}</td>
+                <td>{{item.imgurl}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+
+
+{% endblock %}
