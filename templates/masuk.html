@@ -2,19 +2,20 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% block content %}
 
-<div class='container'>
-    <h1>Login</h1>
+<div class='container lgn'>
+    <div class="login">
+        <h1>Login</h1>
+        <form method="POST">
+            {{form.hidden_tag()}}
+            {{wtf.form_field(form.username)}}
+            {{wtf.form_field(form.password)}}<br>
+            {{wtf.form_field(form.submit,class='btn btn-primary longbtn')}}
+        </form>
+        {{msg}}
+        <br>
+    </div>
 
-    <form method="POST">
-        {{form.hidden_tag()}}
-        {{wtf.form_field(form.username)}}
-        {{wtf.form_field(form.password)}}<br>
-        {{wtf.form_field(form.submit,class='btn btn-primary')}}
-    </form>
-    {{msg}}
-    <br>
     <!--<p>daftar di <a href="{{url_for('daftar')}}">sini</a></p>-->
-
 </div>
 
 {% endblock %}
