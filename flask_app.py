@@ -428,7 +428,7 @@ def addajax():
         db.session.add(newdata)
         db.session.commit()
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    df = pd.read_sql_query(f"SELECT * FROM mycart WHERE mycart.username = '{request.form.get('username')}'", con=engine)
+    df = pd.read_sql_query("SELECT * FROM mycart WHERE mycart.username = '"+f"{request.form.get('username')}"+"'", con=engine)
     engine.dispose()
     dfjson=df.to_json(orient="table")
     return jsonify({'mycart':dfjson})
