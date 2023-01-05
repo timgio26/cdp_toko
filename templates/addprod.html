@@ -1,21 +1,33 @@
-{% extends 'base.html' %}
+{% extends 'base copy.html' %}
 {% block content %}
 
-<h1>add prod</h1>
-<form method="POST" enctype=multipart/form-data>
-    <label for="formHero" class="form-label">Gambar Produk</label>
-    <input class="form-control" type='file' name='formHero' id="formHero">
-    <label for="formNama" class="form-label">Nama Produk</label>
-    <input class="form-control" type='text' name='formNama' id="formNama" required>
-    <label for="formHarga" class="form-label">Harga Produk</label>
-    <input class="form-control" type='number' name='formHarga' id="formHarga" required>
-    <label for="formDisc" class="form-label">Harga Diskon</label>
-    <input class="form-control" type='number' name='formDisc' id="formDisc">
-    <label for="editordata" class="form-label">Deskripsi Produk</label>
-    <textarea id="summernote" name="editordata"></textarea>
-    <button type="submit" class="btn btn-primary mb-3">Submit</button>
+<div class="container">
+    <h2>Tambah Produk</h2>
+    <form method="POST" enctype=multipart/form-data>
+        <label for="formHero" class="form-label">Gambar Produk</label>
+        <input class="form-control" type='file' name='formHero' id="formHero" accept="image/png, image/jpeg">
+        <label for="formNama" class="form-label">Nama Produk</label>
+        <input class="form-control" type='text' name='formNama' id="formNama" required>
+        <div class="row">
+            <div class="col">
+                <label for="formHarga" class="form-label">Harga Produk</label>
+                <input class="form-control" type='number' name='formHarga' id="formHarga" required>
+            </div>
+            <div class="col">
+                <label for="formDisc" class="form-label">Harga Diskon</label>
+                <input class="form-control" type='number' name='formDisc' id="formDisc">
+            </div>
+        </div>
+        <!-- <label for="formHarga" class="form-label">Harga Produk</label>
+        <input class="form-control" type='number' name='formHarga' id="formHarga" required>
+        <label for="formDisc" class="form-label">Harga Diskon</label>
+        <input class="form-control" type='number' name='formDisc' id="formDisc"> -->
+        <label for="editordata" class="form-label">Deskripsi Produk</label>
+        <textarea id="summernote" name="editordata"></textarea>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
     
-</form>
+</div>
 
 
 {% endblock %}

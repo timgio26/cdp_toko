@@ -8,6 +8,7 @@
       <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.css">
       <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
       <link rel="stylesheet" href="{{ url_for('static', filename='styling.css') }}">
+      <script src="/static/localjs.js"></script> 
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -35,15 +36,48 @@
                     <a class="nav-link active" aria-current="page" href="{{url_for('mnguser')}}">User</a>
                     {% endif %}
                     <a class="nav-link active" aria-current="page" href="{{url_for('profile')}}">Profile</a>
-                    <a class="nav-link active" aria-current="page" href="{{url_for('keluar')}}">Keluar</a>
+                    <!-- <a class="nav-link active" aria-current="page" href="{{url_for('keluar')}}">Keluar</a> -->
                     {% else %}
-                    <a class="nav-link active" aria-current="page" href="{{url_for('masuk')}}">Masuk</a>
+                    <!-- <a class="nav-link active" aria-current="page" href="{{url_for('masuk')}}">Masuk</a> -->
                     {% endif %}
 
             </div>
+            
+            <div class="col text-end">
+              {% if session['user'] %}
+              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="updateCart('{{session.user}}')">
+                My Cart 
+              </button>
+              <a class="btn btn-outline-primary btn-sm" role="button" href="{{url_for('keluar')}}">Keluar</a>
+              {% else %}
+              <a class="btn btn-outline-primary btn-sm" role="button" href="{{url_for('masuk')}}">Masuk</a>
+              {% endif %}
+            </div>
+
+            
         </div>
       </div>
     </nav>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">My Cart</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="mycartmodal">
+            <!-- <ul id="mycartmodal">
+    
+            </ul> -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     {% block content %}
     {% endblock %}
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -51,18 +85,4 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.js"></script>
     {% block scripts %}{% endblock %}
   </body>
-  <script>
-    $('#summernote').summernote({
-    //   tabsize: 2,
-      height: 120,
-      toolbar: [
-      ['style', ['bold', 'italic', 'underline', 'clear']],
-    // ['font', ['strikethrough', 'superscript', 'subscript']],
-    ['fontsize', ['fontsize']],
-    // ['color', ['color']],
-    ['para', ['ul', 'ol', 'paragraph']],
-    // ['height', ['height']]
-      ]
-    });
-  </script>
 </html>

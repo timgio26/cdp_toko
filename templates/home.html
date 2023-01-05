@@ -46,7 +46,7 @@
 </div>
 
 <div class="container">
-  <div class="row g-4 py-5 row-cols-2 row-cols-lg-4">
+  <div class="row g-4 pt-5 row-cols-2 row-cols-lg-4">
     <div class="col_rec">
       <img src="{{url_for('static', filename='rating.png')}}" class="img_rec" alt="...">
       <br>
@@ -70,6 +70,32 @@
   </div>
   <hr>
 </div>
+
+<div class="container">
+  <h1>Our Products</h1>
+  <div class="row row-cols-sm-3 row-cols-md-5">
+    {% for i in df %}
+    <div class="col">
+      <div class="prod">
+        <img src="https://cdn-icons-png.flaticon.com/512/1524/1524855.png" alt="" class="prodimage">
+        <p>{{i.prodname}}<br>
+          {% if i.prodpricedisc %}
+          <s>Rp {{i.prodprice}}</s><br>
+          <b>Rp {{i.prodpricedisc}}</b></p>
+          {% else %}
+          <b>Rp {{i.prodprice}}</b></p>
+          {% endif %}
+          <button onclick="addToCart('{{i.id}}','{{session.user}}')" class="btn btn-primary" type="submit" id="btnprod">Add To Cart</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+
+
+
 
 
 {% endblock %}
