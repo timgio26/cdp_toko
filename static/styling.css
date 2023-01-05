@@ -15,3 +15,66 @@ h3{
     text-align: center;
     padding: 25px;
 }
+.prod{
+    text-align:center;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    margin: 5px;
+    padding: 10px;
+    overflow-x: auto;
+  }
+
+.prodimage{
+    width: 100px;
+}
+
+#btnprod{
+    border-radius: 50px;
+}
+
+.cart{
+    padding: 5px;
+    margin: 5px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px 0 rgba(132, 132, 132, 0.2), 0 2px 5px 0 rgba(103, 103, 103, 0.19);
+}
+
+.btncls{
+    text-align: end;
+}
+
+.modqty{
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    background-color: rgb(198, 198, 198);
+    padding: 0px;
+    justify-content: center;
+}
+
+.colcart{
+    justify-content: space-evenly;
+    display: inline-flex;
+}
+
+.login{
+    border-width: 1px;
+    border-color: silver;
+    border-radius: 10px;
+    width: 350px;
+    border-style: solid;
+    padding: 30px;
+    margin-top: 20px;
+}
+
+.lgn{
+    display: grid;
+    justify-content: center;
+}
+
+.longbtn{
+    width: 100%;
+}
