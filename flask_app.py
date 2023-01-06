@@ -13,7 +13,7 @@ from sqlalchemy import desc,create_engine
 from flask_restful import Resource,Api
 from werkzeug.utils import secure_filename
 import pandas as pd
-import json,os
+import json,os,io
 
 app = Flask(__name__)
 # app.config['SECRET_KEY'] = 'you-will-never-guess'
@@ -367,9 +367,18 @@ def downloaddata(tbl):
         engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         df = pd.read_sql_query("SELECT * FROM {}".format(tbl), con=engine)
         engine.dispose()
-        resp = make_response(df.to_csv(index=False))
-        resp.headers["Content-Disposition"] = "attachment; filename={}.csv".format(fname)
-        resp.headers["Content-Type"] = "text/csv"
+        # resp = make_response(df.to_csv(index=False))
+        # resp.headers["Content-Disposition"] = "attachment; filename={}.csv".format(fname)
+        # resp.headers["Content-Type"] = "text/csv"
+
+        out = io.BytesIO()
+        writer = pd.ExcelWriter(out, engine='xlsxwriter')
+        df.to_excel(excel_writer=writer, index=False, sheet_name='Sheet1')
+        writer.save()
+        writer.close()
+        resp = make_response(out.getvalue())
+        resp.headers["Content-Disposition"] = "attachment; filename=export_{}.xlsx".format(fname)
+        resp.headers["Content-type"] = "application/x-xls"
         return resp
     else:
         return redirect(url_for('index'))
