@@ -3,7 +3,7 @@
 
 <div class="container">
     <h2>All Produk</h2>
-    <table>
+    <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -11,6 +11,7 @@
                 <th>Harga Produk</th>
                 <th>Harga Diskon</th>
                 <th>img url</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -21,11 +22,33 @@
                 <td>{{item.prodprice}}</td>
                 <td>{{item.prodpricedisc}}</td>
                 <td>{{item.imgurl}}</td>
+                <th><a href="{{url_for('delprod',id=item.id)}}">delete</a></th>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>    
+</div>
+
+<div class="container">
+    <h2>on cart</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>user</th>
+                <th>produk id</th>
+                <th>qty</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in df2 %}
+            <tr>
+                <td>{{i.username}}</td>
+                <td>{{i.itemid}}</td>
+                <td>{{i.itemqty}}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    
 </div>
 
 

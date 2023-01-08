@@ -45,9 +45,11 @@
             
             <div class="col text-end">
               {% if session['user'] %}
-              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="updateCart('{{session.user}}')">
-                My Cart 
-              </button>
+                {% if session['user']!="admin" %}
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="updateCart('{{session.user}}')">
+                  My Cart 
+                </button>
+                {% endif %}
               <a class="btn btn-outline-primary btn-sm" role="button" href="{{url_for('keluar')}}">Keluar</a>
               {% else %}
               <a class="btn btn-outline-primary btn-sm" role="button" href="{{url_for('masuk')}}">Masuk</a>

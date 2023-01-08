@@ -23,7 +23,11 @@ h3{
     margin: 5px;
     padding: 10px;
     overflow-x: auto;
+    transition: 0.2s;
   }
+.prod:hover{
+    transform: scale(1.05);
+}
 
 .prodimage{
     width: 100px;
@@ -42,6 +46,7 @@ h3{
 
 .btncls{
     text-align: end;
+    max-width: fit-content;
 }
 
 .modqty{
