@@ -14,7 +14,7 @@ function updateCart(c){
             let text = "";
             for (let i = 0; i < data.mycart.length; i++) {
                 text += '<div class="row cart">'+
-                '<div class="col colcart">'+data.mycart[i]['id']+" "+data.mycart[i]['itemid']+"</div>"+
+                '<div class="col colcart">'+data.mycart[i]['prodname']+"</div>"+
                 '<div class="col colcart">'+
                     "<button class='btn modqty' onclick='addCartitem("+data.mycart[i]['id']+",0)'>-</button>"+
                     data.mycart[i]['itemqty']+
@@ -32,15 +32,20 @@ function updateCart(c){
 }
 
 function addToCart(a,c){
-    if (c){
-        console.log('add cart');
+    // console.log(c);
 
-        req=$.ajax({
-            type:"POST",
-            url:"/addajax",
-            data:{"itemid":a,"itemqty":1,'username':c}
-        });
-    
+    if (c){
+        if(c!='admin'){
+            console.log('add cart');
+            req=$.ajax({
+                type:"POST",
+                url:"/addajax",
+                data:{"itemid":a,"itemqty":1,'username':c}
+            });
+        }
+        else{
+            console.log(c+" cant add to cart");
+        }
     }
     else{
         location.href="/login";

@@ -385,21 +385,38 @@ def downloaddata(tbl):
 
 @app.route('/addprod',methods=['GET','POST'])
 def addprod():
-    if request.method=='POST':
-        f=request.files['formHero']
-        filedir=os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(f.filename))
-        if f:
-            f.save(filedir)
-        newprod=dbprod(prodname=request.form['formNama'],prodprice=request.form['formHarga'],prodpricedisc=request.form['formDisc'],proddesc=request.form['editordata'],imgurl=filedir)
-        db.session.add(newprod)
-        db.session.commit()
-        return redirect (url_for('allprod'))
-    return render_template('addprod.html')
+    if session.get('user', 'not set')=='admin':
+        if request.method=='POST':
+            f=request.files['formHero']
+            filedir=os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(f.filename))
+            if f:
+                f.save(filedir)
+            newprod=dbprod(prodname=request.form['formNama'],prodprice=request.form['formHarga'],prodpricedisc=request.form['formDisc'],proddesc=request.form['editordata'],imgurl=filedir)
+            db.session.add(newprod)
+            db.session.commit()
+            return redirect (url_for('allprod'))
+        return render_template('addprod.html')
+    else:
+        return ("not authorized")
 
 @app.route('/allprod',methods=['GET','POST'])
 def allprod():
     df=dbprod.query.all()
-    return render_template('allprod.html',df=df)
+    df2=mycart.query.all()
+    return render_template('allprod.html',df=df,df2=df2)
+
+@app.route('/delprod/<id>',methods=['GET','POST'])
+def delprod(id):
+
+    ## remove dari cart customer
+    mycart.query.filter_by(itemid=id).delete()
+
+    ## remove dari db produk
+    proddel=dbprod.query.get(id)
+    db.session.delete(proddel)
+    db.session.commit()
+
+    return redirect(url_for('allprod'))
 
 @app.route('/trialapi',methods=['GET','POST'])
 def trialapi():
@@ -425,10 +442,10 @@ def delcartitem(id):
 
 @app.route('/addajax',methods=['POST'])
 def addajax():
-    itemdel=mycart.query.filter_by(username=request.form.get('username'),itemid=request.form.get('itemid')).first()
-    if itemdel:
+    itemadd=mycart.query.filter_by(username=request.form.get('username'),itemid=request.form.get('itemid')).first()
+    if itemadd:
         # print(itemdel.id)
-        item=mycart.query.get(itemdel.id)
+        item=mycart.query.get(itemadd.id)
         item.itemqty=item.itemqty+1
         db.session.add(item)
         db.session.commit()
@@ -447,10 +464,12 @@ def addajax():
 def updateCart():
     username=request.args.get('username')
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    df = pd.read_sql_query("SELECT * FROM mycart WHERE mycart.username = '{}'".format(username), con=engine)
+    df = pd.read_sql_query("""SELECT mycart.id,mycart.itemqty,dbprod.prodname FROM mycart LEFT JOIN dbprod ON mycart.itemid=dbprod.id WHERE mycart.username = '{}'""".format(username), con=engine)
     engine.dispose()
+    # print(df)
     dfjson=json.loads(df.to_json(orient="records"))
-    print(type(dfjson))
+    # print(dfjson)
+    # print(type(dfjson))
     return jsonify({'mycart':dfjson})
 
 @app.route('/addCartitem',methods=['POST'])
