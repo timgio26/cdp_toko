@@ -1,34 +1,22 @@
-
-# A very simple Flask Hello World app for you to get started with...
-
 from flask import Flask,render_template,url_for,redirect,session,request,make_response,jsonify
-from flask_wtf import FlaskForm
-from wtforms import StringField,SubmitField,PasswordField,TextField
-from wtforms.fields.html5 import DateField
-from wtforms.validators import DataRequired
 from flask_migrate import Migrate
+# from models import db,dbcust,dbprod,dbservice,dbtrialapi,mycart,usercdp
 from flask_sqlalchemy import SQLAlchemy
+from forms import newcust,newpassform,newuser,loginform,searchcust,serviceform,editcustform,editserviceform,delcustform
 from flask_bootstrap import Bootstrap
 from sqlalchemy import desc,create_engine
 from flask_restful import Resource,Api
 from werkzeug.utils import secure_filename
 import pandas as pd
+
 import json,os,io
 
 app = Flask(__name__)
-# app.config['SECRET_KEY'] = 'you-will-never-guess'
-# SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://timgio26:bumimarinaemas@timgio26.mysql.pythonanywhere-services.com/timgio26$asdasas"
-# app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
-# app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
-# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# app.config["ROW_PER_PAGE"] = 15
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 bootstrap = Bootstrap(app)
 api=Api(app)
-
-
 
 class usercdp(db.Model):
     id=db.Column(db.Integer,primary_key=True)
@@ -73,6 +61,7 @@ class dbtrialapi(db.Model):
     kota=db.Column(db.String(120))
 
 
+
 class restrialapinew(Resource):
     def post(self):
         nama=request.args.get('nama')
@@ -98,66 +87,7 @@ class restrialapinew(Resource):
         # print(df.to_dict())
         return df
 
-
-
-
-# class apiall(Resource):
-#     def get(self):
-#         # df=dbtrialapi.query.all()
-#         engine = create_engine(SQLALCHEMY_DATABASE_URI)
-#         df = pd.read_sql_query("SELECT * FROM dbtrialapi", con=engine)
-#         df=df.to_json()
-#         df=json.loads(df)
-#         # print(df.to_dict())
-#         return df
-
-# api.add_resource(restrialapi,'/api/<inpnama>')
 api.add_resource(restrialapinew,'/apinew')
-# api.add_resource(apiall,'/apiall')
-
-class newuser(FlaskForm):
-    nama=StringField('Nama :',validators=[DataRequired()])
-    username=StringField('Username :',validators=[DataRequired()])
-    password=PasswordField('Password :',validators=[DataRequired()])
-    submit=SubmitField("Tambah")
-
-class loginform(FlaskForm):
-    username=StringField('Username :',validators=[DataRequired()])
-    password=PasswordField('Password :',validators=[DataRequired()])
-    submit=SubmitField("Masuk")
-
-class newpassform(FlaskForm):
-    password_a=PasswordField('Password Baru :',validators=[DataRequired()])
-    password_b=PasswordField('Ulangi Password Baru :',validators=[DataRequired()])
-    submit=SubmitField("Ganti")
-
-class newcust(FlaskForm):
-    nama=StringField("Nama :",validators=[DataRequired()])
-    alamat=StringField("Alamat :",validators=[DataRequired()])
-    tlp=StringField("Telepon :",validators=[DataRequired()])
-    date=DateField("Join Date :")
-    submit=SubmitField("Tambah")
-
-class searchcust(FlaskForm):
-    namacari=StringField("Nama :")
-    submit=SubmitField("Cari")
-
-class serviceform(FlaskForm):
-    tanggal=DateField('Tanggal Service :',validators=[DataRequired()])
-    keluhan=StringField('Keluhan :',validators=[DataRequired()])
-    tindakan=TextField('Tindakan :',validators=[DataRequired()])
-    hasil=TextField('Hasil :',validators=[DataRequired()])
-    dokumentasi=StringField('dokumentasi :')
-    submit=SubmitField("Tambah")
-
-class editserviceform(serviceform):
-    submit=SubmitField("Edit")
-
-class editcustform(newcust):
-    submit=SubmitField("Edit")
-
-class delcustform(FlaskForm):
-    submit=SubmitField("Hapus")
 
 
 @app.route('/',methods=['GET','POST'])
@@ -240,7 +170,6 @@ def deletecust(cid):
         return redirect(url_for('tambahcustomer'))
     return render_template('deletecustomer.html',cust=cust,form=form)
 
-
 @app.route('/addservice<cid>',methods=['GET','POST'])
 def tambahservice(cid):
     form=serviceform()
@@ -280,7 +209,6 @@ def delservice(cid,sid):
     db.session.delete(service)
     db.session.commit()
     return redirect(url_for("tambahservice",cid=cid))
-
 
 @app.route('/register',methods=['GET','POST'])
 def daftar():
