@@ -1,32 +1,96 @@
 from cdp_toko.extension import db
+from sqlalchemy.orm import Mapped,mapped_column,relationship
+from uuid import uuid4,UUID
+from datetime import date
+
+
 
 class UserCdp(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(60))
-    username = db.Column(db.String(60), unique=True)
-    password = db.Column(db.String(60))
+    id:Mapped[UUID] = mapped_column(default=uuid4(), primary_key=True)
+    name:Mapped[str] = mapped_column(db.String(60))
+    username:Mapped[str] = mapped_column(db.String(60), unique=True)
+    password:Mapped[str] = mapped_column(db.String(162))
 
-# class MyCart(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(60))
-    item_id = db.Column(db.Integer)
-    item_qty = db.Column(db.Integer)
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'username': self.username,
+        }
 
 class Customer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(60))
-    address = db.Column(db.String(60))
-    phone = db.Column(db.String(15))
-    joined_date = db.Column(db.Date)
+    id:Mapped[UUID] = mapped_column(default=uuid4(), primary_key=True)
+    name:Mapped[str] = mapped_column(db.String(60))
+    phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
+    email:Mapped[str] = mapped_column(db.Text,nullable=True)
+    joined_date:Mapped[date] = mapped_column(db.Date)
+    addresses:Mapped[list[Address]] = relationship()
+    def to_dict(self,include_child:bool=False):
+        if(include_child):
+            return {
+                'id': self.id,
+                'name': self.name,
+                'phone':self.phone,
+                'email':self.email,
+                'joined_date': self.joined_date,
+                'addresses':[i.to_dict() for i in self.addresses]
+            }
+        else:
+            return {
+                'id': self.id,
+                'name': self.name,
+                'phone':self.phone,
+                'email':self.email,
+                'joined_date': self.joined_date
+            }
 
-class ServiceRecord(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer)
-    service_date = db.Column(db.Date)
-    complaint = db.Column(db.Text)
-    action_taken = db.Column(db.Text)
-    result = db.Column(db.Text)
-    documentation = db.Column(db.String(120))
+
+class Address(db.Model):
+    id:Mapped[UUID] =  mapped_column(default=uuid4(), primary_key=True)
+    address:Mapped[str] = mapped_column(db.String(60))
+    longitude:Mapped[float] = mapped_column(db.Float,nullable=True)
+    latitude:Mapped[float] = mapped_column(db.Float,nullable=True)
+    phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
+    customer_id:Mapped[UUID] = mapped_column(db.ForeignKey(Customer.id))
+    services:Mapped[list[Service]] = relationship()
+    def to_dict(self,include_child:bool=False):
+        if(include_child):
+            return {
+                "id":self.id,
+                "address":self.address,
+                "phone":self.phone,
+                "latitude":self.latitude,
+                "longtitude":self.longitude,
+                "services":[i.to_dict() for i in self.services]
+            }
+        else:
+            return {
+                "id":self.id,
+                "address":self.address,
+                "phone":self.phone,
+                "latitude":self.latitude,
+                "longtitude":self.longitude
+            }
+
+
+
+class Service(db.Model):
+    id:Mapped[UUID] = mapped_column(default=uuid4(), primary_key=True)
+    service_date:Mapped[date] = mapped_column(db.Date)
+    complaint:Mapped[str] = mapped_column(db.Text)
+    action_taken:Mapped[str] = mapped_column(db.Text)
+    result:Mapped[str] = mapped_column(db.Text)
+    documentation:Mapped[str] = mapped_column(db.Text,nullable=True)
+    address_id:Mapped[UUID] = mapped_column(db.ForeignKey(Address.id))
+    def to_dict(self):
+        return {
+            "id":self.id,
+            "service_date":self.service_date,
+            "complaint":self.complaint,
+            "action_taken":self.action_taken,
+            "result":self.result,
+            "documentation":self.documentation
+        }
 
 # class Product(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +101,12 @@ class ServiceRecord(db.Model):
 #     description = db.Column(db.Text)
 
 # class TrialApi(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
-    city = db.Column(db.String(120))
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(120))
+#     city = db.Column(db.String(120))
+
+# class MyCart(db.Model):
+    # id = db.Column(db.Integer, primary_key=True)
+    # username = db.Column(db.String(60))
+    # item_id = db.Column(db.Integer)
+    # item_qty = db.Column(db.Integer)

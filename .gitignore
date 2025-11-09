@@ -4,3 +4,4 @@ venv/
 *.sqlite
 *pyc
 static/upload/
+.env
