@@ -19,7 +19,7 @@ class UserCdp(db.Model):
         }
 
 class Customer(db.Model):
-    id:Mapped[UUID] = mapped_column(default=uuid4(), primary_key=True)
+    id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     name:Mapped[str] = mapped_column(db.String(60))
     phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
     email:Mapped[str] = mapped_column(db.Text,nullable=True)
@@ -46,8 +46,9 @@ class Customer(db.Model):
 
 
 class Address(db.Model):
-    id:Mapped[UUID] =  mapped_column(default=uuid4(), primary_key=True)
+    id:Mapped[UUID] =  mapped_column(default=uuid4, primary_key=True)
     address:Mapped[str] = mapped_column(db.String(60))
+    kategori:Mapped[str] = mapped_column(db.String(60))
     longitude:Mapped[float] = mapped_column(db.Float,nullable=True)
     latitude:Mapped[float] = mapped_column(db.Float,nullable=True)
     phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
@@ -58,6 +59,7 @@ class Address(db.Model):
             return {
                 "id":self.id,
                 "address":self.address,
+                "kategori":self.kategori,
                 "phone":self.phone,
                 "latitude":self.latitude,
                 "longtitude":self.longitude,
@@ -67,6 +69,7 @@ class Address(db.Model):
             return {
                 "id":self.id,
                 "address":self.address,
+                "kategori":self.kategori,
                 "phone":self.phone,
                 "latitude":self.latitude,
                 "longtitude":self.longitude
@@ -75,7 +78,7 @@ class Address(db.Model):
 
 
 class Service(db.Model):
-    id:Mapped[UUID] = mapped_column(default=uuid4(), primary_key=True)
+    id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     service_date:Mapped[date] = mapped_column(db.Date)
     complaint:Mapped[str] = mapped_column(db.Text)
     action_taken:Mapped[str] = mapped_column(db.Text)

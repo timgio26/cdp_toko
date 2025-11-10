@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSignIn, useSignUp } from '../utils/customerQuery';
 
 type AuthMode = 'login' | 'signup';
 
@@ -15,6 +16,8 @@ export function Authentication() {
   const [mode, setMode] = useState<AuthMode>('login');
   const [loginForm, setLoginForm] = useState<LoginFormState>({ username: '', password: '' });
   const [signupForm, setSignupForm] = useState<SignupFormState>({ name: '', username: '', password: '' });
+  const {mutate:signUp,isPending:loadingSignUp} = useSignUp()
+  const {mutate:signIn,isPending:loadingSignIn} = useSignIn()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,9 +31,15 @@ export function Authentication() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'login') {
-      console.log('Logging in with', loginForm);
+      // console.log('Logging in with', loginForm);
+      signIn(loginForm)
     } else {
-      console.log('Signing up with', signupForm);
+      // console.log('Signing up with', signupForm);
+      signUp(signupForm,{
+        onSuccess:()=>{
+          setMode('login')
+        }
+      })
     }
   };
 
@@ -92,8 +101,9 @@ export function Authentication() {
           <button
             type="submit"
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+
           >
-            {mode === 'login' ? 'Login' : 'Sign Up'}
+            {loadingSignUp||loadingSignIn?"Loading...":mode === 'login' ? 'Login' : 'Sign Up'}
           </button>
         </form>
 

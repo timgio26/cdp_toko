@@ -1,39 +1,65 @@
+// import { useEffect } from "react";
 import { type ReactNode } from "react";
 
-type CornerModalProp = {
+type ModalProps = {
   children: ReactNode;
-  ModalTrigerIcon:ReactNode;
-  submitFunction: ()=>void;
-  showModal:boolean;
-  setShowModal:React.Dispatch<React.SetStateAction<boolean>>
+  ModalTriggerIcon: ReactNode;
+  submitFunction: () => void;
+  showModal: boolean;
+  setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export function CornerModal({ children,ModalTrigerIcon,submitFunction,showModal,setShowModal}: CornerModalProp) {
+export function CornerModal({
+  children,
+  ModalTriggerIcon,
+  submitFunction,
+  showModal,
+  setShowModal,
+}: ModalProps) {
+  // useEffect(() => {
+  //   const handleEsc = (e: KeyboardEvent) => {
+  //     if (e.key === "Escape") setShowModal(false);
+  //   };
+  //   document.addEventListener("keydown", handleEsc);
+  //   return () => document.removeEventListener("keydown", handleEsc);
+  // }, [setShowModal]);
+
   return (
     <>
-      <div
-        className="z-10 bg-white w-full sm:w-1/3 md:w-1/4 flex flex-col justify-around sm:justify-start rounded overflow-hidden shadow-lg p-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        hidden={!showModal}
-      >
-        {children}
-        <div className="flex flex-row gap-2 justify-end mt-3">
-          <div
-            className="bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded-full cursor-pointer"
-            onClick={() => setShowModal(false)}
-          >
-            cancel
-          </div>
-          <div className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full cursor-pointer" onClick={submitFunction}>
-            submit
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm transition-all"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white w-full max-w-sm sm:max-w-md rounded-xl shadow-xl p-6 animate-fade-in">
+            <div className="text-gray-800 text-base">{children}</div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitFunction}
+                className="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+              >
+                Submit
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div
-        className="z-10 fixed bottom-5 right-10 bg-blue-500 rounded-full hover:opacity-50 transition-opacity cursor-pointer aspect-square shadow"
+      )}
+
+      <button
         onClick={() => setShowModal(true)}
+        className="fixed bottom-5 right-6 z-40 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:opacity-80 transition-opacity"
+        aria-label="Open modal"
       >
-        {ModalTrigerIcon}
-      </div>
+        {ModalTriggerIcon}
+      </button>
     </>
   );
 }

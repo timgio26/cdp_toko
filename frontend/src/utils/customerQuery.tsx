@@ -1,36 +1,37 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getAllCustomer,
-  CreateNewCustomer as CreateNewCustomerApi,
-  GetCustomer,
-  CreateNewAddress as CreateNewAddressApi,
   CreateNewService as CreateNewServiceApi
 } from "./api";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import axios from "axios"; 
+import { useNavigate } from "react-router";
 
-export const serviceSchema = z.object({
+const serviceSchema = z.object({
   id: z.string(),
-  keluhan: z.string(),
-  tindakan: z.string(),
-  hasil: z.string(),
-  serviceDate: z.string(),
+  complaint: z.string(),
+  action_taken: z.string(),
+  result: z.string(),
+  service_date: z.string(),
 });
 
 const AddressSchema = z.object({
   id: z.string(),
-  alamat: z.string(),
+  address: z.string(),
   kategori: z.string(),
-  serviceList: z.array(serviceSchema).nullable(),
+  services: z.array(serviceSchema).nullable().optional(),
 });
 const CustomerSchema = z.object({
   id: z.string(),
   name: z.string(),
-  phoneNumber: z.string(),
-  createdAt: z.string(),
-  addressList: z.array(AddressSchema).nullable(),
+  phone: z.string().nullable(),
+  email: z.string().nullable(),
+  addresses: z.array(AddressSchema).nullable(),
 });
+
+const SigninSchema = z.object({
+  access_token : z.string()
+})
 
 const AllCustomerListSchema = z.array(CustomerSchema);
 
@@ -39,6 +40,25 @@ type SignupDto = {
   name:string;
   password: string;
 };
+
+type SigninDto = {
+  username: string;
+  password: string;
+};
+
+type NewCustomerDto = {
+    name:string;
+    phone:string|undefined;
+    email:string|undefined;
+    joined_date:string;
+}
+
+type NewAddressDto = {
+    address:string;
+    phone:string|undefined;
+    kategori:string;
+    customer_id:string;
+}
 
 export function useSignUp(){
   const {mutate,isError,isPending} = useMutation({
@@ -49,65 +69,130 @@ export function useSignUp(){
       }
     },
     onError:()=>{
-      console.log("error")
+      toast.error("Can't signup try again later")
     },
     onSuccess:()=>{
-      console.log("success")
+      toast.success("Signup success! Please Login")
+    }
+
+  })
+  return {mutate,isError,isPending}
+}
+
+export function useSignIn(){
+  const navigate = useNavigate()
+  const {mutate,isError,isPending} = useMutation({
+    mutationFn:async(data:SigninDto)=>{
+      const resp = await axios.post('api/signin',data)
+      if(resp.status!=200){
+        throw new Error("Signin error")
+      }
+      const parsed = SigninSchema.safeParse(resp.data)
+      if(!parsed.success){
+        throw new Error("signup error")
+      }
+      return parsed.data
+    },
+    onError:()=>{
+      toast.error("Can't Login. Try again later")
+    },
+    onSuccess:(fromMutation)=>{
+      toast.success("Login Success")
+      sessionStorage.setItem('token',fromMutation.access_token)
+      navigate("/")
     }
   })
   return {mutate,isError,isPending}
 }
 
+//Customer
+
 export function useGetAllCustomer() {
+  const token = sessionStorage.getItem("token");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["allCustomer"],
     queryFn: async()=>{
-      const resp = await axios.get(`api/customers`)
+      const resp = await axios.get(`api/customers`,{headers:{Authorization:`Bearer ${token}`}})
       return resp.data
     },
     retry: false,
   });
 
   const parseResult = AllCustomerListSchema.safeParse(data);
-
-  if (!parseResult.success)
-    return { data: null, isLoading: null, isError: true };
-  return { data: parseResult.data, isLoading, isError };
+  // console.log(parseResult)
+  return {
+    data: parseResult.success ? parseResult.data : null,
+    isLoading,
+    isError: isError || !parseResult.success,
+  };
 }
 
 export function useCreateNewCustomer() {
+  const token = sessionStorage.getItem("token");
   const queryClient = useQueryClient();
   const { mutate: createNewCustomer, isPending } = useMutation({
-    mutationFn: CreateNewCustomerApi,
+    mutationFn: async(data:NewCustomerDto)=>{
+      const resp = await axios.post(`api/customers`,data,{headers:{Authorization:`Bearer ${token}`}})
+      if(resp.status!=201){
+        throw new Error("Cant add new customer")
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allCustomer"] });
-      toast("Customer added",{type:"success"})
+      toast.success("Customer added")
     },
     onError:()=>{
-      toast("Failed add customer",{type:"error"})
+      toast.error("Can't add customer. Try again later")
     }
   });
   return { createNewCustomer, isPending };
 }
 
-export function GetSingleUser(id:string){
-  
+export function useDeleteCustomer(){
+  const token = sessionStorage.getItem("token");
+  const queryClient = useQueryClient();
+  const {mutate,isError,isPending} =useMutation({
+    mutationFn:async(id:string)=>{
+      await axios.delete(`api/customers/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+    },
+    onSuccess:()=>{
+      queryClient.invalidateQueries({ queryKey: ["allCustomer"] });
+      toast.success("Customer added")
+    },
+    onError:()=>{
+      toast.error("Can't delete user. Try again later")
+    }
+  })
+  return {mutate,isError,isPending}
+}
+
+export function useGetSingleCustomer(id:string){
+  const token = sessionStorage.getItem("token");
   const {data,isLoading,isError}=useQuery({
-    queryKey:['singleCustomer'],
-    queryFn:()=>GetCustomer(id),
+    queryKey:['singleCustomer',id],
+    queryFn:async()=>{
+      const resp = await axios.get(`api/customers/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      return resp.data
+    },
     retry:false
   })
   const parseResult = CustomerSchema.safeParse(data)
-  if (!parseResult.success)
-    return { data: null, isLoading: null, isError: true };
-
-  return {data:parseResult,isLoading,isError}
+  return {
+    data: parseResult.success ? parseResult.data : null,
+    isLoading,
+    isError: isError || !parseResult.success,
+  };
 }
 
+//Address
 export function useCreateNewAddress(){
   const queryClient = useQueryClient()
+  const token = sessionStorage.getItem("token");
   const {mutate:CreateNewAddress,isPending} = useMutation({
-    mutationFn:CreateNewAddressApi,
+    mutationFn:async(data:NewAddressDto)=>{
+      const resp = await axios.post(`api/addresses`,data,{headers:{Authorization:`Bearer ${token}`}})
+      return resp.data
+    },
     onSuccess:()=>{
       queryClient.invalidateQueries({queryKey:["singleCustomer"]})
     },
@@ -118,6 +203,25 @@ export function useCreateNewAddress(){
   return {CreateNewAddress,isPending}
 }
 
+export function useGetAddress(id:string){
+  const token = sessionStorage.getItem("token");
+  const {data,isLoading,isError}=useQuery({
+    queryKey:['Address',id],
+    queryFn:async()=>{
+      const resp = await axios.get(`api/addresses/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      return resp.data
+    },
+    retry:false
+  })
+  const parseResult = AddressSchema.safeParse(data)
+  return {
+    data: parseResult.success ? parseResult.data : null,
+    isLoading,
+    isError: isError || !parseResult.success,
+  };
+}
+
+//Service
 export function useCreateNewService(){
   // const queryClient = useQueryClient()
   const {mutate:CreateNewService,isPending} = useMutation({

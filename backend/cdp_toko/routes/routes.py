@@ -100,7 +100,7 @@ def create_address():
 @jwt_required()
 def get_address(id):
     address:Address = Address.query.get_or_404(UUID(id))
-    return address.to_dict(), 200
+    return address.to_dict(include_child=True), 200
 
 @main_bp.put('/addresses/<id>')
 @jwt_required()
