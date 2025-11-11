@@ -2,10 +2,14 @@ import { useLocation } from "react-router";
 import { NewServiceModalFormGroup } from "../Components/NewServiceModalFormGroup";
 import { z } from "zod";
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
-import { useGetAddress } from "../utils/customerQuery";
+import { useDeleteService, useGetAddress, type IService } from "../utils/customerQuery";
 import { PageLoading } from "./Index";
 import { IoIosTrash, IoMdCreate } from "react-icons/io";
-// import { serviceSchema } from "../utils/customerQuery";
+import { PopupModal } from "../Components/PopupModal";
+import { useState } from "react";
+import { IoIosCloseCircleOutline } from "react-icons/io";
+import { EditServiceForm } from "../Components/EditServiceForm";
+import { formatBeautifulDate } from "../utils/myfunction";
 
 const ServicePageSchema = z.object({
   key: z.string(),
@@ -17,11 +21,29 @@ const ServicePageSchema = z.object({
 
 export function Service() {
   const location = useLocation();
+  const { mutate: deleteService, isPending } = useDeleteService();
+  const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
+  const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
+  const [editData,setEditData] = useState<IService>()
+  const [delId, setDelId] = useState<string>("");
+
+  function handleDeleteService() {
+    deleteService(delId, {
+      onSuccess: () => {
+        setShowDelPopup(false);
+      },
+    });
+  }
+
   const { data, success } = ServicePageSchema.safeParse(location);
   if (!success) return <ErrorBackToHome />;
-  const {data: address_data,isError,isLoading,} = useGetAddress(data.state.id);
-  if (!address_data || isError) return <ErrorBackToHome />;
+  const {
+    data: address_data,
+    isError,
+    isLoading,
+  } = useGetAddress(data.state.id);
   if (isLoading) return <PageLoading />;
+  if (!address_data || isError) return <ErrorBackToHome />;
 
   return (
     <div className="space-y-6">
@@ -39,10 +61,10 @@ export function Service() {
           <table className="min-w-full border-separate border-spacing-y-4">
             <thead>
               <tr className="text-left text-sm text-gray-500">
-                <th className="px-4">Date</th>
-                <th className="px-4">Complaint</th>
-                <th className="px-4">Action Taken</th>
-                <th className="px-4">Result</th>
+                <th className="px-4">Tanggal</th>
+                <th className="px-4">Keluhan</th>
+                <th className="px-4">Tindakan</th>
+                <th className="px-4">Hasil</th>
                 <th className="px-6 py-3 text-right"></th>
               </tr>
             </thead>
@@ -53,7 +75,7 @@ export function Service() {
                   className="bg-white rounded-xl shadow-sm transition hover:shadow-md"
                 >
                   <td className="px-4 py-3 text-sm text-slate-700">
-                    {each.service_date}
+                    {formatBeautifulDate(each.service_date)}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-700">
                     {each.complaint}
@@ -68,6 +90,10 @@ export function Service() {
                     <button
                       className="flex items-center gap-1 text-yellow-600 hover:text-white hover:bg-yellow-500 px-2 py-1 border border-yellow-500 rounded transition"
                       title="Edit"
+                      onClick={() => {
+                        setEditData(each);
+                        setShowEditPopup(true);
+                      }}
                     >
                       <IoMdCreate size={16} />
                     </button>
@@ -75,7 +101,8 @@ export function Service() {
                       className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 border border-red-500 rounded transition"
                       title="Delete"
                       onClick={() => {
-                        console.log("delete")
+                        setShowDelPopup(true);
+                        setDelId(each.id);
                       }}
                     >
                       <IoIosTrash size={16} />
@@ -95,7 +122,46 @@ export function Service() {
 
       {/* Add New Service */}
       <div className="pt-4">
-        <NewServiceModalFormGroup />
+        <NewServiceModalFormGroup address_id={data.state.id} />
+        <PopupModal visible={showDelPopup}>
+          <>
+            {/* Content Slot */}
+            <div className="space-y-4">
+              <p className="text-sm text-gray-700">
+                Are you sure you want to delete?
+              </p>
+            </div>
+
+            {/* Icon */}
+            <div className="flex justify-center mt-6">
+              <IoIosCloseCircleOutline size={64} className="text-red-500" />
+            </div>
+
+            {/* Button */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDelPopup(false)}
+                className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteService}
+                data-testid="confirmButton"
+                className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-sm font-medium text-white transition"
+              >
+                {isPending ? "Loading" : "Delete"}
+              </button>
+            </div>
+          </>
+        </PopupModal>
+
+        {editData && (
+          <PopupModal
+            visible={showEditPopup}
+            children={<EditServiceForm data={editData} setModalVisibility={setShowEditPopup}/>}
+          />
+        )}
       </div>
     </div>
   );

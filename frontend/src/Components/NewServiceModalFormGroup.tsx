@@ -1,10 +1,29 @@
 import { useState } from "react";
 import { CornerModal } from "./CornerModal";
 import { IoIosAdd } from "react-icons/io";
+import { get_today_date } from "../utils/myfunction";
+import { useCreateNewService } from "../utils/customerQuery";
 
-export function NewServiceModalFormGroup() {
+type NewServiceModalFormGroupProp = {
+  address_id:string
+}
+
+export function NewServiceModalFormGroup({address_id}:NewServiceModalFormGroupProp) {
+  const {CreateNewService,isPending} = useCreateNewService()
   const [showModal, setShowModal] = useState<boolean>(false);
-  function handleSubmit() {}
+  const [serviceDate,setServiceDate] = useState<string>(get_today_date())
+  const [complaint,setComplaint] = useState<string>("")
+  const [action,setAction] = useState<string>("")
+  const [result,setResult] = useState<string>("")
+
+  function handleSubmit() {
+    CreateNewService({address_id,service_date:serviceDate,complaint,action_taken:action,result},{
+      onSuccess:()=>{
+        setShowModal(false)
+      }
+    })
+  }
+  
   return (
     <CornerModal
       ModalTriggerIcon={<IoIosAdd size={45} color="white" />}
@@ -35,6 +54,9 @@ export function NewServiceModalFormGroup() {
             rows={3}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm resize-none focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition"
             placeholder="Describe the issue or complaint"
+            value={complaint}
+            onChange={(e)=>setComplaint(e.target.value)}
+            contentEditable={!isPending}
           />
         </div>
 
@@ -52,6 +74,9 @@ export function NewServiceModalFormGroup() {
             rows={3}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm resize-none focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition"
             placeholder="Actions taken"
+            value={action}
+            onChange={(e)=>setAction(e.target.value)}
+            contentEditable={!isPending}
           />
         </div>
 
@@ -66,6 +91,9 @@ export function NewServiceModalFormGroup() {
             rows={3}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm resize-none focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition"
             placeholder="Outcome or result"
+            value={result}
+            onChange={(e)=>setResult(e.target.value)}
+            contentEditable={!isPending}
           />
         </div>
 
@@ -82,7 +110,8 @@ export function NewServiceModalFormGroup() {
             name="Tanggal"
             id="Tanggal"
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition"
-            defaultValue={new Date().toISOString().split("T")[0]}
+            defaultValue={serviceDate}
+            onChange={(e)=>setServiceDate(e.target.value)}
           />
         </div>
       </form>

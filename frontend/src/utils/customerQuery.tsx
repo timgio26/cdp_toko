@@ -1,25 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CreateNewService as CreateNewServiceApi
-} from "./api";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import axios from "axios"; 
 import { useNavigate } from "react-router";
 
-const serviceSchema = z.object({
+
+const ServiceSchema = z.object({
   id: z.string(),
   complaint: z.string(),
   action_taken: z.string(),
   result: z.string(),
   service_date: z.string(),
 });
+export type IService = z.infer<typeof ServiceSchema>;
 
 const AddressSchema = z.object({
   id: z.string(),
   address: z.string(),
   kategori: z.string(),
-  services: z.array(serviceSchema).nullable().optional(),
+  services: z.array(ServiceSchema).nullable().optional(),
 });
 const CustomerSchema = z.object({
   id: z.string(),
@@ -59,6 +58,22 @@ type NewAddressDto = {
     kategori:string;
     customer_id:string;
 }
+
+type NewServiceDto = {
+  address_id: string;
+  service_date: string;
+  complaint: string;
+  action_taken: string;
+  result: string;
+};
+
+type EditServiceDto = {
+  id: string;
+  service_date: string;
+  complaint: string;
+  action_taken: string;
+  result: string;
+};
 
 export function useSignUp(){
   const {mutate,isError,isPending} = useMutation({
@@ -223,15 +238,66 @@ export function useGetAddress(id:string){
 
 //Service
 export function useCreateNewService(){
-  // const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
+  const token = sessionStorage.getItem("token");
   const {mutate:CreateNewService,isPending} = useMutation({
-    mutationFn:CreateNewServiceApi,
-    // onSuccess() {
-    //   queryClient.invalidateQueries({queryKey:["singleCustomer"]})
-    // },
+    mutationFn:async(data:NewServiceDto)=>{
+          const resp = await axios.post(`api/services`,data,{headers:{Authorization:`Bearer ${token}`}})
+          if (resp.status!=201) throw new Error("cant add service")
+    },
     onError:()=>{
-      toast("Failed add service",{type:"error"})
+      toast.error("Can't add service. Try again later")
+    },
+    onSuccess:()=>{
+      queryClient.invalidateQueries({ queryKey: ["Address"] });
+      toast.success("Service added")
     }
   })
   return {CreateNewService,isPending}
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient()
+  const {mutate,isError,isPending} = useMutation({
+    // mutationKey: [id],
+    mutationFn: async (id: string) => {
+      const token = sessionStorage.getItem("token");
+      const resp = await axios.delete(`api/services/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp.status != 204)
+        throw new Error("Can't delete service, try again later.");
+    },
+    onError:(e)=>{
+      toast.error(e.message)
+    },
+    onSuccess:()=>{
+      queryClient.invalidateQueries({ queryKey: ["Address"] });
+      toast.success("Service deleted")
+    }
+  });
+  return {mutate,isError,isPending}
+}
+
+export function useEditService(){
+  const queryClient = useQueryClient()
+  const {mutate,isPending} = useMutation({
+    mutationFn:async(data:EditServiceDto)=>{
+      const token = sessionStorage.getItem("token");
+      const resp = await axios.put(`api/services/${data.id}`,data, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if(resp.status!=200){
+        throw new Error("Can't update service, try again later.")
+      }
+    },
+    onError:(e)=>{
+      toast.error(e.message)
+    },
+    onSuccess:()=>{
+      toast.success("Service updated")
+      queryClient.invalidateQueries({ queryKey: ["Address"] });
+    }
+  })
+  return {mutate,isPending}
 }

@@ -7,6 +7,7 @@ import NewCustomerModalFormGroup from "../Components/NewCustomerModalFormGroup";
 import { PopupModal } from "../Components/PopupModal";
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { PageLoading } from "./PageLoading";
+import { IoIosCloseCircleOutline } from "react-icons/io";
 
 type CustomerOnDelete = {
   id: string;
@@ -15,33 +16,30 @@ type CustomerOnDelete = {
 
 export function Homepage() {
   const { data, isLoading, isError } = useGetAllCustomer();
-  const {
-    mutate: deleteUser,
-    isError: isDeleteError,
-    isPending: isDeleting,
-  } = useDeleteCustomer();
+  const { mutate: deleteUser, isPending: isDeleting } = useDeleteCustomer();
   const [showDelPopup, setShowDelPopup] = useState(false);
-  const [userOnDelete, setUserOnDelete] = useState<CustomerOnDelete | null>(
-    null
-  );
+  const [userOnDelete, setUserOnDelete] = useState<CustomerOnDelete>();
 
-  const handleDeleteUser = (id: string) => {
-    // TODO: Implement actual delete logic
-    deleteUser(id);
-    if (!isDeleteError) {
-      setShowDelPopup(false);
-    }
-  };
+  function handleDeleteUser() {
+    if (!userOnDelete?.id) return;
+    deleteUser(userOnDelete.id, {
+      onSuccess: () => {
+        setShowDelPopup(false);
+      },
+    });
+  }
 
-  if(isLoading)return <PageLoading/>
+  if (isLoading) return <PageLoading />;
   if (isError) return <ErrorBackToHome />;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-xl font-semibold ">Customer List</h2>
+    <div className="space-y-8">
+      {/* Title */}
+      <div>
+        <h1 className="text-3xl font-bold text-slate-800">Customer List</h1>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto shadow rounded-lg">
         <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200">
           <thead className="bg-gray-50 text-xs uppercase text-gray-500">
@@ -94,7 +92,7 @@ export function Homepage() {
                     className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 border border-red-500 rounded transition"
                     title="Delete"
                     onClick={() => {
-                      setUserOnDelete({ id: customer.id, name: customer.name });
+                      setUserOnDelete(customer);
                       setShowDelPopup(true);
                     }}
                   >
@@ -107,19 +105,39 @@ export function Homepage() {
         </table>
       </div>
 
-      <NewCustomerModalFormGroup />
-      <PopupModal
-        visible={showDelPopup}
-        setVisible={setShowDelPopup}
-        confirmText={isDeleting ? "Loading" : "Delete"}
-        onConfirm={() => {
-          if (userOnDelete?.id) handleDeleteUser(userOnDelete.id);
-        }}
-      >
-        <p className="text-sm text-gray-700">
-          Are you sure you want to delete <strong>{userOnDelete?.name}</strong>?
-        </p>
-      </PopupModal>
+      {/* Add New Service */}
+      <div className="pt-4">
+        <NewCustomerModalFormGroup />
+        <PopupModal visible={showDelPopup}>
+          {/* Content Slot */}
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">
+              Are you sure you want to delete{" "}
+              <strong>{userOnDelete?.name}</strong>?
+            </p>
+          </div>
+          {/* Icon */}
+          <div className="flex justify-center mt-6">
+            <IoIosCloseCircleOutline size={64} className="text-red-500" />
+          </div>
+          {/* Button */}
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              onClick={() => setShowDelPopup(false)}
+              className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteUser}
+              data-testid="confirmButton"
+              className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-sm font-medium text-white transition"
+            >
+              {isDeleting ? "Loading" : "Delete"}
+            </button>
+          </div>
+        </PopupModal>
+      </div>
     </div>
   );
 }

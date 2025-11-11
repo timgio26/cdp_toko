@@ -3,7 +3,7 @@ import { IoIosAdd } from "react-icons/io";
 import { useState } from "react";
 import React from "react";
 import { useCreateNewCustomer } from "../utils/customerQuery";
-import { get_today_date } from "../utils/api";
+import { get_today_date } from "../utils/myfunction";
 
 function NewCustomerModalFormGroup() {
   const [nama, setNama] = useState<string>("");
