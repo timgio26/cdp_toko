@@ -10,6 +10,7 @@ import { useState } from "react";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { EditServiceForm } from "../Components/EditServiceForm";
 import { formatBeautifulDate } from "../utils/myfunction";
+import { CiCircleChevLeft } from "react-icons/ci";
 
 const ServicePageSchema = z.object({
   key: z.string(),
@@ -48,23 +49,34 @@ export function Service() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <div className="flex items-center gap-4">
+
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center "
+        >
+          {/* <CiCircleChevLeft className="text-3xl" /> */}
+          <CiCircleChevLeft size={30} className="text-gray-300 hover:text-indigo-500 transition cursor-pointer"/>
+          {/* <span className="hidden sm:inline text-sm font-medium">Back</span> */}
+        </button>
       <div>
         <h1 className="text-3xl font-bold text-slate-800">Service</h1>
         <p className="text-sm text-gray-500">
           {address_data.address} — {address_data.kategori}
         </p>
       </div>
+      </div>
 
       {/* Conditional Table or Empty State */}
       {address_data.services && address_data.services.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-y-4">
-            <thead>
-              <tr className="text-left text-sm text-gray-500">
-                <th className="px-4">Tanggal</th>
-                <th className="px-4">Keluhan</th>
-                <th className="px-4">Tindakan</th>
-                <th className="px-4">Hasil</th>
+        <div className="overflow-x-auto shadow">
+          <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+              <tr >
+                <th className="px-6 py-3">Tanggal</th>
+                <th className="px-6 py-3">Keluhan</th>
+                <th className="px-6 py-3">Tindakan</th>
+                <th className="px-6 py-3">Hasil</th>
                 <th className="px-6 py-3 text-right"></th>
               </tr>
             </thead>
@@ -74,19 +86,19 @@ export function Service() {
                   key={index}
                   className="bg-white rounded-xl shadow-sm transition hover:shadow-md"
                 >
-                  <td className="px-4 py-3 text-sm text-slate-700">
+                  <td className="px-6 py-3 text-sm text-slate-700">
                     {formatBeautifulDate(each.service_date)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
+                  <td className="px-6 py-3 text-sm text-slate-700">
                     {each.complaint}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
+                  <td className="px-6 py-3 text-sm text-slate-700">
                     {each.action_taken}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
+                  <td className="px-6 py-3 text-sm text-slate-700">
                     {each.result}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700 justify-end flex gap-2">
+                  <td className="px-6 py-3 text-sm text-slate-700 justify-end flex gap-2">
                     <button
                       className="flex items-center gap-1 text-yellow-600 hover:text-white hover:bg-yellow-500 px-2 py-1 border border-yellow-500 rounded transition"
                       title="Edit"

@@ -2,27 +2,29 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { IoIosTrash, IoIosEye, IoMdCreate } from "react-icons/io";
 
-import { useDeleteCustomer, useGetAllCustomer } from "../utils/customerQuery";
+import { useDeleteCustomer, useGetAllCustomer, type ICustomer } from "../utils/customerQuery";
 import NewCustomerModalFormGroup from "../Components/NewCustomerModalFormGroup";
 import { PopupModal } from "../Components/PopupModal";
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { PageLoading } from "./PageLoading";
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import { EditCustomerForm } from "../Components/EditCustomerForm";
 
-type CustomerOnDelete = {
-  id: string;
-  name: string;
-};
+// type CustomerOnDelete = {
+//   id: string;
+//   name: string;
+// };
 
 export function Homepage() {
   const { data, isLoading, isError } = useGetAllCustomer();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteCustomer();
-  const [showDelPopup, setShowDelPopup] = useState(false);
-  const [userOnDelete, setUserOnDelete] = useState<CustomerOnDelete>();
+  const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
+  const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
+  const [selectedUser, setSelectedUser] = useState<ICustomer>();
 
   function handleDeleteUser() {
-    if (!userOnDelete?.id) return;
-    deleteUser(userOnDelete.id, {
+    if (!selectedUser) return;
+    deleteUser(selectedUser.id, {
       onSuccess: () => {
         setShowDelPopup(false);
       },
@@ -40,7 +42,7 @@ export function Homepage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto shadow rounded-lg">
+      <div className="overflow-x-auto shadow">
         <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200">
           <thead className="bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
@@ -85,6 +87,10 @@ export function Homepage() {
                   <button
                     className="flex items-center gap-1 text-yellow-600 hover:text-white hover:bg-yellow-500 px-2 py-1 border border-yellow-500 rounded transition"
                     title="Edit"
+                    onClick={()=>{
+                      setSelectedUser(customer);
+                      setShowEditPopup(true)
+                    }}
                   >
                     <IoMdCreate size={16} />
                   </button>
@@ -92,7 +98,7 @@ export function Homepage() {
                     className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 border border-red-500 rounded transition"
                     title="Delete"
                     onClick={() => {
-                      setUserOnDelete(customer);
+                      setSelectedUser(customer);
                       setShowDelPopup(true);
                     }}
                   >
@@ -108,12 +114,14 @@ export function Homepage() {
       {/* Add New Service */}
       <div className="pt-4">
         <NewCustomerModalFormGroup />
+        {selectedUser&&
+        <>
         <PopupModal visible={showDelPopup}>
           {/* Content Slot */}
           <div className="space-y-4">
             <p className="text-sm text-gray-700">
               Are you sure you want to delete{" "}
-              <strong>{userOnDelete?.name}</strong>?
+              <strong>{selectedUser.name}</strong>?
             </p>
           </div>
           {/* Icon */}
@@ -137,6 +145,9 @@ export function Homepage() {
             </button>
           </div>
         </PopupModal>
+        <PopupModal visible={showEditPopup} children={<EditCustomerForm data={selectedUser} setModalVisibility={setShowEditPopup}/>}/>
+        </>
+        }
       </div>
     </div>
   );

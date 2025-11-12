@@ -111,6 +111,7 @@ def update_address(id):
     address.latitude = update_data.latitude
     address.longitude = update_data.longitude
     address.phone = update_data.phone
+    address.kategori = update_data.kategori
     db.session.add(address)
     db.session.commit()
     return address.to_dict(),200

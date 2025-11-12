@@ -32,7 +32,7 @@ class Customer(db.Model):
                 'name': self.name,
                 'phone':self.phone,
                 'email':self.email,
-                'joined_date': self.joined_date,
+                'joined_date': str(self.joined_date),
                 'addresses':[i.to_dict() for i in self.addresses]
             }
         else:
@@ -41,7 +41,7 @@ class Customer(db.Model):
                 'name': self.name,
                 'phone':self.phone,
                 'email':self.email,
-                'joined_date': self.joined_date
+                'joined_date': str(self.joined_date)
             }
 
 
@@ -88,7 +88,7 @@ class Service(db.Model):
     def to_dict(self):
         return {
             "id":self.id,
-            "service_date":self.service_date,
+            "service_date":str(self.service_date),
             "complaint":self.complaint,
             "action_taken":self.action_taken,
             "result":self.result,

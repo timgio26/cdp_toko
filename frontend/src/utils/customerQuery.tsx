@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import axios from "axios"; 
 import { useNavigate } from "react-router";
 
-
 const ServiceSchema = z.object({
   id: z.string(),
   complaint: z.string(),
@@ -18,15 +17,22 @@ const AddressSchema = z.object({
   id: z.string(),
   address: z.string(),
   kategori: z.string(),
+  phone:z.string().nullable(),
   services: z.array(ServiceSchema).nullable().optional(),
 });
+
+export type IAddress = z.infer<typeof AddressSchema>
+
 const CustomerSchema = z.object({
   id: z.string(),
   name: z.string(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
-  addresses: z.array(AddressSchema).nullable(),
+  joined_date:z.string(),
+  addresses: z.array(AddressSchema).nullable().optional(),
 });
+
+export type ICustomer = z.infer<typeof CustomerSchema>
 
 const SigninSchema = z.object({
   access_token : z.string()
@@ -199,6 +205,26 @@ export function useGetSingleCustomer(id:string){
   };
 }
 
+
+export function useEditCustomer(){
+  const queryClient = useQueryClient();
+  const {mutate,isPending} = useMutation({
+    mutationFn:async(data:ICustomer)=>{
+      const token = sessionStorage.getItem("token");
+      const resp = await axios.put(`api/customers/${data.id}`,data,{headers:{Authorization:`Bearer ${token}`}})
+      if(resp.status!=200) throw new Error("Can't edit Customer")
+    },
+    onError:(e)=>{
+      toast.error(e.message)
+    },
+    onSuccess:()=>{
+      toast.success("Customer updated")
+      queryClient.invalidateQueries({ queryKey: ["allCustomer"] });
+    }
+  })
+  return {mutate,isPending}
+}
+
 //Address
 export function useCreateNewAddress(){
   const queryClient = useQueryClient()
@@ -234,6 +260,44 @@ export function useGetAddress(id:string){
     isLoading,
     isError: isError || !parseResult.success,
   };
+}
+
+export function useEditAddress(){
+  const queryClient = useQueryClient()
+  const {mutate,isPending} = useMutation({
+    mutationFn:async(data:IAddress)=>{
+      const token = sessionStorage.getItem("token");
+      const resp = await axios.put(`api/addresses/${data.id}`,data,{headers:{Authorization:`Bearer ${token}`}})
+      if (resp.status!=200)throw new Error("Can't update address, try again later")
+    },
+    onError:(e)=>{
+      toast.error(e.message)
+    },
+    onSuccess:()=>{
+      queryClient.invalidateQueries({queryKey:["singleCustomer"]})
+      toast.success("Address updated")
+    }
+  })
+  return {mutate,isPending}
+}
+
+export function useDeleteAddress(){
+  const queryClient = useQueryClient()
+  const {mutate,isPending} = useMutation({
+    mutationFn:async(id:string)=>{
+      const token = sessionStorage.getItem("token");
+      const resp = await axios.delete(`api/addresses/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      if (resp.status!=204) throw new Error("Can't delete address, try again later")
+    },
+  onError:(e)=>{
+    toast.error(e.message)
+  },
+  onSuccess:()=>{
+    toast.success("Address deleted")
+    queryClient.invalidateQueries({queryKey:["singleCustomer"]})
+  }
+  })
+  return {mutate,isPending}
 }
 
 //Service
