@@ -87,7 +87,10 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
             id="phone"
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[a-zA-Z]/g, '');
+              setPhone(value)}
+            }
             placeholder="e.g. 022 - 5412345"
           />
         </div>
