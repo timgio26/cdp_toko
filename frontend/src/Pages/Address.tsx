@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "react-router";
 import { z } from "zod";
-import { useDeleteAddress, useGetSingleCustomer, type IAddress } from "../utils/customerQuery";
+import {
+  useDeleteAddress,
+  useGetSingleCustomer,
+  type IAddress,
+} from "../utils/customerQuery";
 
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { NewAddressModalFormGroup } from "../Components/NewAddressModalFormGroup";
@@ -25,14 +29,14 @@ export function Address() {
   const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
   const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
   const [selectedAddress, setSelectedAddress] = useState<IAddress>();
-  const {mutate:deleteAddress,isPending} = useDeleteAddress()
-  function handleDelete(){
-    if(selectedAddress){
-      deleteAddress(selectedAddress.id,{
-        onSuccess:()=>{
-          setShowDelPopup(false)
-        }
-      })
+  const { mutate: deleteAddress, isPending } = useDeleteAddress();
+  function handleDelete() {
+    if (selectedAddress) {
+      deleteAddress(selectedAddress.id, {
+        onSuccess: () => {
+          setShowDelPopup(false);
+        },
+      });
     }
   }
 
@@ -43,31 +47,35 @@ export function Address() {
   );
 
   if (!isLoading && isError) return <ErrorBackToHome />;
+  if (!data) return <ErrorBackToHome />;
 
   return (
     <>
-      {data && (
         <div className="space-y-6">
           {/* Customer Header */}
-<div className="flex items-center gap-4">
-  {/* Back Button */}
-  <button
-    onClick={() => window.history.back()}
-    className="flex items-center"
-  >
-    <CiCircleChevLeft size={30} className="text-gray-300 hover:text-indigo-500 transition cursor-pointer"/>
-    {/* <span className="hidden sm:inline text-sm font-medium">Back</span> */}
-  </button>
+          <div className="flex items-center gap-4">
+            {/* Back Button */}
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center"
+            >
+              <CiCircleChevLeft
+                size={30}
+                className="text-gray-300 hover:text-indigo-500 transition cursor-pointer"
+              />
+              {/* <span className="hidden sm:inline text-sm font-medium">Back</span> */}
+            </button>
 
-  {/* User Info */}
-  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-    <div>
-      <h1 className="text-3xl font-bold text-slate-800">{data.name}</h1>
-      <p className="text-sm text-zinc-500">📞 {data.phone}</p>
-    </div>
-  </div>
-</div>
-
+            {/* User Info */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800">
+                  {data.name}
+                </h1>
+                <p className="text-sm text-zinc-500">📞 {data.phone}</p>
+              </div>
+            </div>
+          </div>
 
           {/* Address Tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -143,7 +151,7 @@ export function Address() {
             </PopupModal>
           </div>
         </div>
-      )}
+
     </>
   );
 }

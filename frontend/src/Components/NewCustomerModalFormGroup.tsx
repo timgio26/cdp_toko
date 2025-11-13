@@ -20,6 +20,10 @@ function NewCustomerModalFormGroup() {
       {
         onSuccess: () => {
           setShowModal(false);
+          setNama("")
+          setNoHp("")
+          setEmail("")
+          setJoinedDate(get_today_date())
         },
       }
     );
@@ -63,7 +67,11 @@ function NewCustomerModalFormGroup() {
             id="phone"
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition"
             value={noHp}
-            onChange={(e) => setNoHp(e.target.value)}
+            onChange={(e) => {
+                const value = e.target.value.replace(/[a-zA-Z]/g, '');
+                setNoHp(value);
+
+            }}
             placeholder="e.g. 0812-3456-7890"
           />
         </div>

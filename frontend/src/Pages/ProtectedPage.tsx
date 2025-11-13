@@ -8,7 +8,7 @@ type ProtectedPageProps = {
 export function ProtectedPage({ children }: ProtectedPageProps) {
   const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
-
+  
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     if (!token) {

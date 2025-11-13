@@ -3,6 +3,7 @@ import { z } from "zod";
 import { toast } from "react-toastify";
 import axios from "axios"; 
 import { useNavigate } from "react-router";
+import { axiosInstance } from "./myfunction";
 
 const ServiceSchema = z.object({
   id: z.string(),
@@ -38,7 +39,14 @@ const SigninSchema = z.object({
   access_token : z.string()
 })
 
-const AllCustomerListSchema = z.array(CustomerSchema);
+const AllCustomerListSchema = z.object({
+  
+  data:z.array(CustomerSchema),
+  page:z.number(),
+  per_page:z.number(),
+  total:z.number(),
+  total_pages:z.number()
+})
 
 type SignupDto = {
   username: string;
@@ -128,19 +136,19 @@ export function useSignIn(){
 
 //Customer
 
-export function useGetAllCustomer() {
-  const token = sessionStorage.getItem("token");
+export function useGetAllCustomer(page:number,search:string|undefined) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["allCustomer"],
+    queryKey: ["allCustomer",page,search],
     queryFn: async()=>{
-      const resp = await axios.get(`api/customers`,{headers:{Authorization:`Bearer ${token}`}})
+      const token = sessionStorage.getItem("token");
+      const resp = await axiosInstance.get(`api/customers?page=${page}&search=${search}`,{headers:{Authorization:`Bearer ${token}`}})
       return resp.data
     },
     retry: false,
   });
 
+
   const parseResult = AllCustomerListSchema.safeParse(data);
-  // console.log(parseResult)
   return {
     data: parseResult.success ? parseResult.data : null,
     isLoading,
