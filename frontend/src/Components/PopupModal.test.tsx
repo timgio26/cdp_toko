@@ -5,7 +5,7 @@ import { PopupModal } from './PopupModal';
 
 
 test("test confirm button",async()=>{
-  render(<PopupModal visible={true} setVisible={()=>{}} onConfirm={()=>{}} confirmText='Confirm'>
+  render(<PopupModal visible={true}>
     <p>test</p>
   </PopupModal>)
   expect(screen.getByTestId("confirmButton").textContent).toBe("Confirm")
