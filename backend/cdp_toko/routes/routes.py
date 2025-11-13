@@ -1,4 +1,4 @@
-from flask import Blueprint,jsonify,request
+from flask import Blueprint,jsonify,request,redirect
 from cdp_toko.extension import db
 from cdp_toko.models.models import UserCdp,Customer,Address,Service
 from cdp_toko.models.dtos import SignInDTO
@@ -7,8 +7,15 @@ from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from uuid import UUID
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
+import os
+
 
 main_bp = Blueprint('main', __name__)
+
+@main_bp.route('/')
+def index():
+    frontend_url = os.getenv("FRONTEND_URL")
+    return redirect(frontend_url)
 
 @main_bp.route('/version')
 def version():
@@ -52,7 +59,7 @@ def create_customer():
     new_user = Customer(**request.json)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'Customer created'}), 201
+    return jsonify({'message': 'Customer created','id':new_user.id}), 201
 
 @main_bp.get('/customers')
 @jwt_required()
@@ -125,7 +132,7 @@ def create_address():
     new_address = Address(**data)
     db.session.add(new_address)
     db.session.commit()
-    return jsonify({'message': 'Address created'}), 201
+    return jsonify({'message': 'Address created','id':new_address.id}), 201
 
 @main_bp.get('/addresses/<id>')
 @jwt_required()
