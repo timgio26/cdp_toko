@@ -5,6 +5,8 @@ from cdp_toko.models.dtos import SignInDTO
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from uuid import UUID
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 main_bp = Blueprint('main', __name__)
 
@@ -41,7 +43,7 @@ def authenticate_user():
     data = SignInDTO(**request.json)
     user:UserCdp = UserCdp.query.filter_by(username=data.username).one_or_404()
     if check_password_hash(user.password,data.password):
-        token = create_access_token(identity=user.username)
+        token = create_access_token(identity=user.username,expires_delta=False)
         return jsonify({"access_token":token}),200
     
 @main_bp.post('/customers')
@@ -55,8 +57,37 @@ def create_customer():
 @main_bp.get('/customers')
 @jwt_required()
 def get_all_customer():
-    customer:list[Customer] = Customer.query.all()
-    return [i.to_dict(include_child=True) for i in customer], 200
+    # Get pagination parameters from query string
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 10))  # default 20 items per page
+    search = str(request.args.get('search'))
+
+    # Calculate offset
+    offset = (page - 1) * per_page
+    query = Customer.query.options(joinedload(Customer.addresses))
+
+    # Apply filtering only if search is provided
+    if len(search)>0:
+        query = query.outerjoin(Address).filter(
+            or_(
+                Customer.name.contains(f"%{search}%"),
+                Customer.phone.contains(f"%{search}%"),
+                Address.address.contains(f"%{search}%")
+            )
+        )
+
+    total = query.count()
+    customers = query.offset(offset).limit(per_page).all()
+    # customers = Customer.query.offset(offset).limit(per_page).all()
+    # customer:list[Customer] = Customer.query.all()
+    return {
+        "data": [i.to_dict(include_child=True) for i in customers],
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "total_pages": (total + per_page - 1) // per_page #floor division operator
+    }, 200
+
 
 @main_bp.get('/customers/<id>')
 @jwt_required()
