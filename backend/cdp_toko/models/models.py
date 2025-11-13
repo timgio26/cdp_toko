@@ -6,7 +6,7 @@ from datetime import date
 
 
 class UserCdp(db.Model):
-    id:Mapped[UUID] = mapped_column(default=uuid4(), primary_key=True)
+    id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     name:Mapped[str] = mapped_column(db.String(60))
     username:Mapped[str] = mapped_column(db.String(60), unique=True)
     password:Mapped[str] = mapped_column(db.String(162))
@@ -24,7 +24,7 @@ class Customer(db.Model):
     phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
     email:Mapped[str] = mapped_column(db.Text,nullable=True)
     joined_date:Mapped[date] = mapped_column(db.Date)
-    addresses:Mapped[list[Address]] = relationship(back_populates="customer")
+    addresses:Mapped[list["Address"]] = relationship()
     def to_dict(self,include_child:bool=False):
         if(include_child):
             return {
@@ -52,7 +52,7 @@ class Address(db.Model):
     latitude:Mapped[float] = mapped_column(db.Float,nullable=True)
     phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
     customer_id:Mapped[UUID] = mapped_column(db.ForeignKey(Customer.id))
-    services:Mapped[list[Service]] = relationship(back_populates="address")
+    services:Mapped[list["Service"]] = relationship()
     def to_dict(self,include_child:bool=False):
         if(include_child):
             return {
