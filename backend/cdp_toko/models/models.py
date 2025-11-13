@@ -17,14 +17,14 @@ class UserCdp(db.Model):
             'name': self.name,
             'username': self.username,
         }
-
+    
 class Customer(db.Model):
     id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     name:Mapped[str] = mapped_column(db.String(60))
     phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
     email:Mapped[str] = mapped_column(db.Text,nullable=True)
     joined_date:Mapped[date] = mapped_column(db.Date)
-    addresses:Mapped[list[Address]] = relationship()
+    addresses:Mapped[list[Address]] = relationship(back_populates="customer")
     def to_dict(self,include_child:bool=False):
         if(include_child):
             return {
@@ -43,8 +43,7 @@ class Customer(db.Model):
                 'email':self.email,
                 'joined_date': str(self.joined_date)
             }
-
-
+    
 class Address(db.Model):
     id:Mapped[UUID] =  mapped_column(default=uuid4, primary_key=True)
     address:Mapped[str] = mapped_column(db.String(60))
@@ -53,7 +52,7 @@ class Address(db.Model):
     latitude:Mapped[float] = mapped_column(db.Float,nullable=True)
     phone:Mapped[str] = mapped_column(db.String(15),nullable=True)
     customer_id:Mapped[UUID] = mapped_column(db.ForeignKey(Customer.id))
-    services:Mapped[list[Service]] = relationship()
+    services:Mapped[list[Service]] = relationship(back_populates="address")
     def to_dict(self,include_child:bool=False):
         if(include_child):
             return {
@@ -74,9 +73,7 @@ class Address(db.Model):
                 "latitude":self.latitude,
                 "longtitude":self.longitude
             }
-
-
-
+        
 class Service(db.Model):
     id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     service_date:Mapped[date] = mapped_column(db.Date)
@@ -94,6 +91,16 @@ class Service(db.Model):
             "result":self.result,
             "documentation":self.documentation
         }
+    
+
+        
+
+
+
+
+
+
+
 
 # class Product(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
