@@ -23,12 +23,13 @@ export function Homepage() {
   const [search, setSearch] = useState<string>();
   const [searchInput, setSearchInput] = useState<string>("");
 
-  const { data, isLoading } = useGetAllCustomer(page,search);
+  const { data, isLoading} = useGetAllCustomer(page,search);
   
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteCustomer();
   const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
   const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<ICustomer>();
+
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -63,7 +63,6 @@ export function Address() {
                 size={30}
                 className="text-gray-300 hover:text-indigo-500 transition cursor-pointer"
               />
-              {/* <span className="hidden sm:inline text-sm font-medium">Back</span> */}
             </button>
 
             {/* User Info */}
@@ -72,7 +71,7 @@ export function Address() {
                 <h1 className="text-3xl font-bold text-slate-800">
                   {data.name}
                 </h1>
-                <p className="text-sm text-zinc-500">📞 {data.phone}</p>
+                <p className="text-sm text-zinc-500">📞 {data.phone??"No Phone Number"}</p>
               </div>
             </div>
           </div>
@@ -82,6 +81,7 @@ export function Address() {
             {data.addresses ? (
               data.addresses.map((each) => (
                 <AddressTiles
+                  key={each.id}
                   addressData={each}
                   edit_function={() => {
                     setSelectedAddress(each);

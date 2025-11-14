@@ -2,14 +2,21 @@ import { useState } from "react";
 import { CornerModal } from "../Components/CornerModal";
 import { IoIosAdd } from "react-icons/io";
 import { useCreateNewAddress } from "../utils/customerQuery";
+import { MapLeaflet } from "./MapLeaflet";
+import { CiMapPin, CiCircleChevUp } from "react-icons/ci";
 
 type NewAddressModalFormGroupProp = {
   customer_id: string;
 };
 
-export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroupProp) {
+export function NewAddressModalFormGroup({
+  customer_id,
+}: NewAddressModalFormGroupProp) {
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showMap, setShowMap] = useState<boolean>(false);
   const [address, setAddress] = useState<string>();
+  const [latitude,setLat]=useState<number|undefined|null>(null)
+  const [longitude,setLon] = useState<number|undefined|null>(null) 
   const [kategori, setKategori] = useState<string>();
   const [phone, setPhone] = useState<string>();
   const { CreateNewAddress, isPending } = useCreateNewAddress();
@@ -17,12 +24,15 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
   function SubmitNewAddressHandler() {
     if (isPending) return;
     if (!address || !kategori) return;
-    CreateNewAddress({ customer_id, address, kategori,phone },
+    CreateNewAddress({ customer_id, address, kategori, phone ,latitude,longitude},
       {
-        onSuccess: () => {setShowModal(false)
-          setAddress(undefined)
-          setKategori(undefined)
-          setPhone(undefined)
+        onSuccess: () => {
+          setShowModal(false);
+          setAddress(undefined);
+          setKategori(undefined);
+          setPhone(undefined);
+          setLat(null)  
+          setLon(null)
         },
       }
     );
@@ -35,7 +45,7 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
       showModal={showModal}
       setShowModal={setShowModal}
     >
-      <form className="space-y-6">
+      <form className="space-y-6 overflow-y-scroll max-h-100 px-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">New Address</h2>
           <p className="text-sm text-gray-500">
@@ -45,7 +55,7 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
 
         <div className="flex flex-col gap-1">
           <label htmlFor="Alamat" className="text-sm font-medium text-gray-700">
-            Alamat
+            Alamat*
           </label>
           <textarea
             name="Alamat"
@@ -58,12 +68,32 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
           />
         </div>
 
+        {/* <div className="h-40 w-full"> */}
+        <div className="relative">
+          {showMap && <MapLeaflet lat={latitude} lon={longitude} setLat={setLat} setLon={setLon}/>}
+          <div className="flex justify-center">
+            <div
+              onClick={() => setShowMap((curstate) => !curstate)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold shadow-lg cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+            >
+              <span className="text-sm tracking-wide">
+                {showMap ? "Hide" : latitude&&longitude?"Edit pinpoint": "Add pipoint"}
+              </span>
+              {showMap ? (
+                <CiCircleChevUp className="text-xl" />
+              ) : (
+                <CiMapPin className="text-xl" />
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-1">
           <label
             htmlFor="Kategori"
             className="text-sm font-medium text-gray-700"
           >
-            Kategori
+            Kategori*
           </label>
           <select
             name="Kategori"
@@ -72,7 +102,9 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
             value={kategori}
             onChange={(e) => setKategori(e.target.value)}
           >
-            <option value="" hidden>Select category</option>
+            <option value="" hidden>
+              Select category
+            </option>
             <option value="Rumah">Rumah</option>
             <option value="Toko">Toko</option>
             <option value="Restaurant">Restaurant</option>
@@ -81,7 +113,7 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
           </select>
         </div>
 
-          <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <label htmlFor="phone" className="text-sm font-medium text-gray-700">
             No Telepon
           </label>
@@ -92,9 +124,9 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
             className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition"
             value={phone}
             onChange={(e) => {
-              const value = e.target.value.replace(/[a-zA-Z]/g, '');
-              setPhone(value)}
-            }
+              const value = e.target.value.replace(/[a-zA-Z]/g, "");
+              setPhone(value);
+            }}
             placeholder="e.g. 022 - 5412345"
           />
         </div>

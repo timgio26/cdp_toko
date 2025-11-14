@@ -12,11 +12,12 @@ export function NewServiceModalFormGroup({address_id}:NewServiceModalFormGroupPr
   const {CreateNewService,isPending} = useCreateNewService()
   const [showModal, setShowModal] = useState<boolean>(false);
   const [serviceDate,setServiceDate] = useState<string>(get_today_date())
-  const [complaint,setComplaint] = useState<string>("")
-  const [action,setAction] = useState<string>("")
-  const [result,setResult] = useState<string>("")
+  const [complaint,setComplaint] = useState<string>()
+  const [action,setAction] = useState<string>()
+  const [result,setResult] = useState<string>()
 
   function handleSubmit() {
+    if(!action)return;
     CreateNewService({address_id,service_date:serviceDate,complaint,action_taken:action,result},{
       onSuccess:()=>{
         setShowModal(false)
@@ -35,7 +36,7 @@ export function NewServiceModalFormGroup({address_id}:NewServiceModalFormGroupPr
       showModal={showModal}
       setShowModal={setShowModal}
     >
-      <form className="space-y-6">
+      <form className="space-y-6 max-h-100 overflow-y-scroll px-6">
         {/* Header */}
         <div>
           <h2 className="text-2xl font-bold text-slate-800">New Service</h2>

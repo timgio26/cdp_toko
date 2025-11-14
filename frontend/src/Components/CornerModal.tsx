@@ -32,10 +32,10 @@ export function CornerModal({
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white w-full max-w-sm sm:max-w-md rounded-xl shadow-xl p-6 animate-fade-in">
+          <div className="bg-white w-full max-w-sm sm:max-w-md rounded-xl shadow-xl py-6 animate-fade-in">
             <div className="text-gray-800 text-base">{children}</div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3 mx-6">
               <button
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition"

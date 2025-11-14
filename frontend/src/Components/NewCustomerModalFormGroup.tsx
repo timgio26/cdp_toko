@@ -7,8 +7,8 @@ import { get_today_date } from "../utils/myfunction";
 
 function NewCustomerModalFormGroup() {
   const [nama, setNama] = useState<string>("");
-  const [noHp, setNoHp] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [noHp, setNoHp] = useState<string>();
+  const [email, setEmail] = useState<string>();
   const [joinedDate, setJoinedDate] = useState<string>(get_today_date());
   const [showModal, setShowModal] = useState<boolean>(false);
 
@@ -36,7 +36,7 @@ function NewCustomerModalFormGroup() {
       showModal={showModal}
       setShowModal={setShowModal}
     >
-      <form className="space-y-6">
+      <form className="space-y-6 max-h-100 overflow-y-scroll px-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">New Customer</h2>
           <p className="text-sm text-gray-500">Please fill in the details below.</p>

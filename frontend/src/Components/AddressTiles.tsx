@@ -31,10 +31,11 @@ export function AddressTiles({addressData,edit_function,delete_function}:Address
         {/* <span className="text-xs text-gray-400">🧭 Location</span> */}
         <CiEdit size={24} className="text-gray-300 hover:text-amber-500 transition cursor-pointer" onClick={edit_function}/>
         <CiTrash size={24} className="text-gray-300 hover:text-red-800 transition cursor-pointer" onClick={delete_function}/>
-        <CiMap size={24} className="text-gray-300 hover:text-green-800 transition cursor-pointer"/>
-        {/* <button className="bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium px-3 py-1 rounded-full transition">
-          Get Direction
-        </button> */}
+        {addressData.latitude&&addressData.longitude&&
+        <Link to={`https://www.google.com/maps?q=${addressData.latitude},${addressData.longitude}`} target='_blank'>
+          <CiMap size={24} className="text-gray-300 hover:text-green-800 transition cursor-pointer"/>
+        </Link>
+        }
       </div>
     </div>
   );
