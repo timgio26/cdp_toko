@@ -150,7 +150,7 @@ export function useGetAllCustomer(page:number,search:string|undefined) {
     retry: false,
   });
   if(isError){
-    toast.error("Can't load customer, please trya again later")
+    toast.error("Can't load customer, please try again later")
   }
 
   const parseResult = AllCustomerListSchema.safeParse(data);
