@@ -7,9 +7,9 @@ import { axiosInstance } from "./myfunction";
 
 const ServiceSchema = z.object({
   id: z.string(),
-  complaint: z.string(),
+  complaint: z.string().nullable().optional(),
   action_taken: z.string(),
-  result: z.string(),
+  result: z.string().nullable().optional(),
   service_date: z.string(),
 });
 export type IService = z.infer<typeof ServiceSchema>;
@@ -19,6 +19,8 @@ const AddressSchema = z.object({
   address: z.string(),
   kategori: z.string(),
   phone:z.string().nullable(),
+  latitude:z.number().nullable().optional(),
+  longitude:z.number().nullable().optional(),
   services: z.array(ServiceSchema).nullable().optional(),
 });
 
@@ -40,7 +42,6 @@ const SigninSchema = z.object({
 })
 
 const AllCustomerListSchema = z.object({
-  
   data:z.array(CustomerSchema),
   page:z.number(),
   per_page:z.number(),
@@ -71,14 +72,16 @@ type NewAddressDto = {
     phone:string|undefined;
     kategori:string;
     customer_id:string;
+    latitude:number|undefined|null;
+    longitude:number|undefined|null;
 }
 
 type NewServiceDto = {
   address_id: string;
   service_date: string;
-  complaint: string;
+  complaint: string|undefined|null;
   action_taken: string;
-  result: string;
+  result: string|undefined|null;
 };
 
 type EditServiceDto = {
@@ -146,7 +149,9 @@ export function useGetAllCustomer(page:number,search:string|undefined) {
     },
     retry: false,
   });
-
+  if(isError){
+    toast.error("Can't load customer, please trya again later")
+  }
 
   const parseResult = AllCustomerListSchema.safeParse(data);
   return {

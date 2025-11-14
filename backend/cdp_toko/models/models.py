@@ -61,7 +61,7 @@ class Address(db.Model):
                 "kategori":self.kategori,
                 "phone":self.phone,
                 "latitude":self.latitude,
-                "longtitude":self.longitude,
+                "longitude":self.longitude,
                 "services":[i.to_dict() for i in self.services]
             }
         else:
@@ -71,15 +71,15 @@ class Address(db.Model):
                 "kategori":self.kategori,
                 "phone":self.phone,
                 "latitude":self.latitude,
-                "longtitude":self.longitude
+                "longitude":self.longitude
             }
         
 class Service(db.Model):
     id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     service_date:Mapped[date] = mapped_column(db.Date)
-    complaint:Mapped[str] = mapped_column(db.Text)
+    complaint:Mapped[str] = mapped_column(db.Text,nullable=True)
     action_taken:Mapped[str] = mapped_column(db.Text)
-    result:Mapped[str] = mapped_column(db.Text)
+    result:Mapped[str] = mapped_column(db.Text,nullable=True)
     documentation:Mapped[str] = mapped_column(db.Text,nullable=True)
     address_id:Mapped[UUID] = mapped_column(db.ForeignKey(Address.id))
     def to_dict(self):

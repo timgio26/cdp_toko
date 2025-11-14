@@ -1,16 +1,15 @@
+import { useState } from "react";
 import { useLocation } from "react-router";
-import { NewServiceModalFormGroup } from "../Components/NewServiceModalFormGroup";
 import { z } from "zod";
-import { ErrorBackToHome } from "../Components/ErrorBackToHome";
+import { formatBeautifulDate } from "../utils/myfunction";
 import { useDeleteService, useGetAddress, type IService } from "../utils/customerQuery";
 import { PageLoading } from "./Index";
-import { IoIosTrash, IoMdCreate } from "react-icons/io";
+import { NewServiceModalFormGroup } from "../Components/NewServiceModalFormGroup";
+import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { PopupModal } from "../Components/PopupModal";
-import { useState } from "react";
-import { IoIosCloseCircleOutline } from "react-icons/io";
 import { EditServiceForm } from "../Components/EditServiceForm";
-import { formatBeautifulDate } from "../utils/myfunction";
 import { CiCircleChevLeft } from "react-icons/ci";
+import { IoIosTrash, IoMdCreate ,IoIosCloseCircleOutline} from "react-icons/io";
 
 const ServicePageSchema = z.object({
   key: z.string(),
@@ -71,7 +70,7 @@ export function Service() {
       </div>
 
       {/* Conditional Table or Empty State */}
-      {services ? (
+      {services && services.length>0 ? (
         <div className="overflow-x-auto shadow">
           <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500">
