@@ -9,13 +9,13 @@ type EditServiceFormProp = {
 export function EditServiceForm({data,setModalVisibility}:EditServiceFormProp) {
     const {complaint,action_taken,result,service_date} = data
     const [serviceDateEdit,setServiceDateEdit] = useState<string>(service_date)
-    const [complaintEdit,setComplaintEdit] = useState<string>(complaint)
+    const [complaintEdit,setComplaintEdit] = useState<string|undefined|null>(complaint)
     const [actionEdit,setActionEdit] = useState<string>(action_taken)
-    const [resultEdit,setResultEdit] = useState<string>(result)
+    const [resultEdit,setResultEdit] = useState<string|undefined|null>(result)
     const {mutate:editService,isPending} = useEditService()
 
     function handleSubmit(){
-        console.log("submit edit")
+        // console.log("submit edit")
         editService({id:data.id,complaint:complaintEdit,action_taken:actionEdit,result:resultEdit,service_date:serviceDateEdit},
             {
                 onSuccess:()=>{
@@ -46,7 +46,7 @@ export function EditServiceForm({data,setModalVisibility}:EditServiceFormProp) {
           rows={3}
           className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm resize-none focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition"
           placeholder="Describe the issue or complaint"
-          value={complaintEdit}
+          value={complaintEdit??undefined}
           onChange={(e) => setComplaintEdit(e.target.value)}
           // contentEditable={!isPending}
         />
@@ -80,7 +80,7 @@ export function EditServiceForm({data,setModalVisibility}:EditServiceFormProp) {
           rows={3}
           className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm resize-none focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition"
           placeholder="Outcome or result"
-          value={resultEdit}
+          value={resultEdit??undefined}
           onChange={(e) => setResultEdit(e.target.value)}
           // contentEditable={!isPending}
         />

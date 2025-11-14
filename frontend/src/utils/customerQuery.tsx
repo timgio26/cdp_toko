@@ -87,9 +87,9 @@ type NewServiceDto = {
 type EditServiceDto = {
   id: string;
   service_date: string;
-  complaint: string;
+  complaint: string|undefined|null;
   action_taken: string;
-  result: string;
+  result: string|undefined|null;
 };
 
 export function useSignUp(){
