@@ -46,6 +46,9 @@ export function Service() {
   if (isLoading) return <PageLoading />;
   if (!address_data || isError) return <ErrorBackToHome />;
 
+  const services= address_data.services?.sort((a,b)=>a.service_date<b.service_date?1:-1)
+  // console.log(services)
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -68,7 +71,7 @@ export function Service() {
       </div>
 
       {/* Conditional Table or Empty State */}
-      {address_data.services && address_data.services.length > 0 ? (
+      {services ? (
         <div className="overflow-x-auto shadow">
           <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500">
@@ -81,7 +84,7 @@ export function Service() {
               </tr>
             </thead>
             <tbody>
-              {address_data.services.map((each, index) => (
+              {services.map((each, index) => (
                 <tr
                   key={index}
                   className="bg-white rounded-xl shadow-sm transition hover:shadow-md"
