@@ -12,11 +12,6 @@ import os
 
 main_bp = Blueprint('main', __name__)
 
-@main_bp.route('/')
-def index():
-    frontend_url = os.getenv("FRONTEND_URL")
-    return redirect(frontend_url)
-
 @main_bp.route('/version')
 def version():
     return "0.0.1",200
@@ -202,13 +197,5 @@ def delete_service(id):
     service:Service = Service.query.get(UUID(id))
     db.session.delete(service)
     db.session.commit()
-    return '',204
-
-
-
-
-
-
-
-    
+    return '',204  
 
