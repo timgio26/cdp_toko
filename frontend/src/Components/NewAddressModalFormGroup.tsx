@@ -19,7 +19,11 @@ export function NewAddressModalFormGroup({customer_id}: NewAddressModalFormGroup
     if (!address || !kategori) return;
     CreateNewAddress({ customer_id, address, kategori,phone },
       {
-        onSuccess: () => setShowModal(false),
+        onSuccess: () => {setShowModal(false)
+          setAddress(undefined)
+          setKategori(undefined)
+          setPhone(undefined)
+        },
       }
     );
   }

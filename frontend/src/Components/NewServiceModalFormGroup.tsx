@@ -20,6 +20,10 @@ export function NewServiceModalFormGroup({address_id}:NewServiceModalFormGroupPr
     CreateNewService({address_id,service_date:serviceDate,complaint,action_taken:action,result},{
       onSuccess:()=>{
         setShowModal(false)
+        setComplaint("")
+        setAction("")
+        setResult("")
+        setServiceDate(get_today_date())
       }
     })
   }
