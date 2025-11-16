@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 import { MergeCustomerSchema, useMergeAddress } from "../utils/customerQuery";
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { useState } from "react";
-import { map } from "leaflet";
+
 
 export function MergeCustomer() {
   const navigate = useNavigate()
