@@ -91,15 +91,12 @@ class Service(db.Model):
             "result":self.result,
             "documentation":self.documentation
         }
-    
 
-        
-
-
-
-
-
-
+class AddressMerge():
+    def __init__(self,customer_id:str,address_list:list[str],unused_customer_list:list[str]):
+        self.customer_id = customer_id
+        self.address_list = address_list
+        self.unused_customer_list=unused_customer_list
 
 
 # class Product(db.Model):

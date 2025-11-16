@@ -1,6 +1,6 @@
 from flask import Blueprint,jsonify,request,redirect
 from cdp_toko.extension import db
-from cdp_toko.models.models import UserCdp,Customer,Address,Service
+from cdp_toko.models.models import UserCdp,Customer,Address,Service,AddressMerge
 from cdp_toko.models.dtos import SignInDTO
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
@@ -158,13 +158,35 @@ def delete_address(id):
     db.session.commit()
     return '',204
 
+@main_bp.post('/addresses/merge')
+@jwt_required()
+def merge_address():
+    data = AddressMerge(**request.json)
+    updated = []
+    unused_customer = []
+    for i in data.unused_customer_list:
+        unused_customer.append(UUID(i))
+
+    for i in data.address_list:
+        address:Address = Address.query.get_or_404(UUID(i))
+        address.customer_id = UUID(data.customer_id)
+        updated.append(address)
+    
+    db.session.bulk_save_objects(updated)
+
+    delete_customer = Customer.query.filter(Customer.id.in_(unused_customer)).all()
+
+    for customer in delete_customer:
+        db.session.delete(customer)
+
+    db.session.commit()
+    return jsonify({"status": "success", "updated": len(updated)}), 200
 
 @main_bp.post('/services')
 @jwt_required()
 def create_service():
     data = request.json.copy()
     data['address_id'] = UUID(data['address_id'])
-    
     new_service = Service(**data)
     db.session.add(new_service)
     db.session.commit()

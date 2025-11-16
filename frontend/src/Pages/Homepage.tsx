@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link,useNavigate } from "react-router";
 
-import {useDeleteCustomer,useGetAllCustomer,type ICustomer,} from "../utils/customerQuery";
-
+import {
+  useDeleteCustomer,
+  useGetAllCustomer,
+  type ICustomer,
+} from "../utils/customerQuery";
 
 import NewCustomerModalFormGroup from "../Components/NewCustomerModalFormGroup";
 import { PopupModal } from "../Components/PopupModal";
-// import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { EditCustomerForm } from "../Components/EditCustomerForm";
 import { Pagination } from "../Components/Pagination";
 import { PageLoading } from "./PageLoading";
-import { IoIosTrash, IoIosEye, IoMdCreate ,IoIosCloseCircleOutline} from "react-icons/io";
+import {
+  IoIosTrash,
+  IoIosEye,
+  IoMdCreate,
+  IoIosCloseCircleOutline,
+} from "react-icons/io";
 import { CiSearch } from "react-icons/ci";
 
 // type CustomerOnDelete = {
@@ -22,28 +29,26 @@ export function Homepage() {
   const [page, setPage] = useState<number>(1);
   const [search, setSearch] = useState<string>();
   const [searchInput, setSearchInput] = useState<string>("");
-
-  const { data, isLoading} = useGetAllCustomer(page,search);
-  
+  const [userMerge, setUserMerge] = useState<ICustomer[]>([]);
+  const { data, isLoading } = useGetAllCustomer(page, search);
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteCustomer();
   const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
   const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<ICustomer>();
-
+  const navigate = useNavigate()
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if(searchInput.length==0||searchInput.length>=3){
+      if (searchInput.length == 0 || searchInput.length >= 3) {
         setSearch(searchInput);
       }
     }, 500); // run this code after 500 ms
     return () => clearTimeout(timer); // cancel previous timer
   }, [searchInput]);
 
-  useEffect(()=>{
-    setPage(1)
-  },[search])
-
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   function handleDeleteUser() {
     if (!selectedUser) return;
@@ -63,8 +68,19 @@ export function Homepage() {
     setPage((curState) => curState - 1);
   }
 
-  // if (isLoading) return <PageLoading />;
-  // if (isError) return <ErrorBackToHome />;
+  function handleAddToList(id: ICustomer) {
+    setUserMerge((curstate) => [...curstate, id]);
+  }
+  function handleRemoveFromList(id: string) {
+    setUserMerge((curstate) => curstate.filter((each) => each.id != id));
+  }
+
+  function handleToMergeCustomer(){
+    if(userMerge.length>1){
+      navigate("/merge-customer",{state:userMerge})
+    }
+  }
+
 
   return (
     <div className="space-y-8">
@@ -76,7 +92,7 @@ export function Homepage() {
         </h1>
 
         {/* Search Bar */}
-        
+
         <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 transition">
           <CiSearch className="text-gray-500" size={20} />
           <input
@@ -90,77 +106,114 @@ export function Homepage() {
       </div>
 
       {/* Table */}
-      {data && data.total>0 ? (
+      {data && data.total > 0 ? (
         <>
           <div className="overflow-x-auto">
-            {isLoading?(<PageLoading/>):(
-
-            <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200 shadow">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                <tr>
-                  <th className="px-6 py-3">Nama</th>
-                  <th className="px-6 py-3">No Hp</th>
-                  <th className="px-6 py-3">Alamat</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.data.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    className="border-t border-gray-200 hover:bg-gray-50"
+            {isLoading ? (
+              <PageLoading />
+            ) : (
+              <>
+                <div className="mb-1">
+                  <div
+                    onClick={handleToMergeCustomer}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded transition
+                    ${
+                      userMerge.length < 2
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-900 cursor-pointer"
+                    }
+                  `}
                   >
-                    <td className="px-6 py-4 font-medium  whitespace-nowrap">
-                      <Link
-                        to="/address-list"
-                        state={{ userId: customer.id }}
-                        className="hover:underline"
+                    Merge Customer
+                  </div>
+                </div>
+
+                <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200 shadow">
+                  <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                    <tr>
+                      <th></th>
+                      <th className="px-6 py-3">Nama</th>
+                      <th className="px-6 py-3">No Hp</th>
+                      <th className="px-6 py-3">Alamat</th>
+                      <th className="px-6 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.data.map((customer) => (
+                      <tr
+                        key={customer.id}
+                        className="border-t border-gray-200 hover:bg-gray-50"
                       >
-                        {customer.name}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4">{customer.phone}</td>
-                    <td className="px-6 py-4">
-                      <ul className="list-disc list-inside text-gray-600">
-                        {customer.addresses?.map((address) => (
-                          <li key={address.id}>{address.address}</li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td className="px-6 py-4 text-right flex gap-2 justify-end">
-                      <Link to="/address-list" state={{ userId: customer.id }}>
-                        <button
-                          className="flex items-center gap-1 text-blue-600 hover:text-white hover:bg-blue-500 px-2 py-1 border border-blue-500 rounded transition"
-                          title="View"
-                        >
-                          <IoIosEye size={16} />
-                        </button>
-                      </Link>
-                      <button
-                        className="flex items-center gap-1 text-yellow-600 hover:text-white hover:bg-yellow-500 px-2 py-1 border border-yellow-500 rounded transition"
-                        title="Edit"
-                        onClick={() => {
-                          setSelectedUser(customer);
-                          setShowEditPopup(true);
-                        }}
-                      >
-                        <IoMdCreate size={16} />
-                      </button>
-                      <button
-                        className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 border border-red-500 rounded transition"
-                        title="Delete"
-                        onClick={() => {
-                          setSelectedUser(customer);
-                          setShowDelPopup(true);
-                        }}
-                      >
-                        <IoIosTrash size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <td className="px-2">
+                          <input
+                            type="checkbox"
+                            name=""
+                            id=""
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handleAddToList(customer);
+                              } else {
+                                handleRemoveFromList(customer.id);
+                              }
+                            }}
+                            checked={userMerge.filter((each)=>each.id==customer.id).length>0}
+                          />
+                        </td>
+                        <td className="px-6 py-4 font-medium  whitespace-nowrap">
+                          <Link
+                            to="/address-list"
+                            state={{ userId: customer.id }}
+                            className="hover:underline"
+                          >
+                            {customer.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4">{customer.phone}</td>
+                        <td className="px-6 py-4">
+                          <ul className="list-disc list-inside text-gray-600">
+                            {customer.addresses?.map((address) => (
+                              <li key={address.id}>{address.address}</li>
+                            ))}
+                          </ul>
+                        </td>
+                        <td className="px-6 py-4 text-right flex gap-2 justify-end">
+                          <Link
+                            to="/address-list"
+                            state={{ userId: customer.id }}
+                          >
+                            <button
+                              className="flex items-center gap-1 text-blue-600 hover:text-white hover:bg-blue-500 px-2 py-1 border border-blue-500 rounded transition"
+                              title="View"
+                            >
+                              <IoIosEye size={16} />
+                            </button>
+                          </Link>
+                          <button
+                            className="flex items-center gap-1 text-yellow-600 hover:text-white hover:bg-yellow-500 px-2 py-1 border border-yellow-500 rounded transition"
+                            title="Edit"
+                            onClick={() => {
+                              setSelectedUser(customer);
+                              setShowEditPopup(true);
+                            }}
+                          >
+                            <IoMdCreate size={16} />
+                          </button>
+                          <button
+                            className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 border border-red-500 rounded transition"
+                            title="Delete"
+                            onClick={() => {
+                              setSelectedUser(customer);
+                              setShowDelPopup(true);
+                            }}
+                          >
+                            <IoIosTrash size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             )}
             <div className="flex justify-end">
               <Pagination
