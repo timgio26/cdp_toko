@@ -1,38 +1,54 @@
-import { CiCircleChevLeft } from "react-icons/ci";
+import { CiCircleChevLeft, CiWarning } from "react-icons/ci";
 import { useLocation, useNavigate } from "react-router";
 import { MergeCustomerSchema, useMergeAddress } from "../utils/customerQuery";
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
 import { useState } from "react";
-
+import { PopupModal } from "../Components/PopupModal";
 
 export function MergeCustomer() {
-  const navigate = useNavigate()
-  const {mutate:mergeAddress,isPending} = useMergeAddress()
+  const navigate = useNavigate();
+  const { mutate: mergeAddress, isPending } = useMergeAddress();
   const [selectedCustomer, setSelectedCustomer] = useState<string>();
+  const [showConfirm, setShowConfirm] = useState<boolean>(false);
   const { state } = useLocation();
   const { data, success } = MergeCustomerSchema.safeParse(state);
   // const allAddressId : string[] = data?.flatMap((each)=>(each.addresses?.map((address)=>(address.id))))
-  const allAddressId = data? data.flatMap((each)=>(each.addresses?.map((address)=>(address.id)))) : []
-  const allAddressIdStr = allAddressId.filter((each)=>typeof(each)=='string')
+  const allAddressId = data
+    ? data.flatMap((each) => each.addresses?.map((address) => address.id))
+    : [];
+  const allAddressIdStr = allAddressId.filter(
+    (each) => typeof each == "string"
+  );
 
-  const unused_customer_list = data? data.flatMap((each)=>(each.id)).filter((each)=>(typeof(each)=='string'&&each!=selectedCustomer)) : []
-  
-
+  const unused_customer_list = data
+    ? data
+        .flatMap((each) => each.id)
+        .filter((each) => typeof each == "string" && each != selectedCustomer)
+    : [];
 
   if (!success) {
-      return <ErrorBackToHome />;
-    }
+    return <ErrorBackToHome />;
+  }
 
-  function handleMerge(){
-    if(!selectedCustomer ) return;
-    // if(allAddressId.length==0)return
-    
-    
-    mergeAddress({customer_id:selectedCustomer,address_list:allAddressIdStr,unused_customer_list},{
-      onSuccess:()=>{
-        navigate("/")
+  function handleClickMerge() {
+    setShowConfirm(true);
+  }
+
+  function handleMerge() {
+    if (!selectedCustomer) return;
+    mergeAddress(
+      {
+        customer_id: selectedCustomer,
+        address_list: allAddressIdStr,
+        unused_customer_list,
+      },
+      {
+        onSuccess: () => {
+          setShowConfirm(false);
+          navigate("/");
+        },
       }
-    })
+    );
   }
 
   return (
@@ -52,22 +68,22 @@ export function MergeCustomer() {
           <div>
             <h1 className="text-3xl font-bold text-slate-800">
               Merge Customer
-              
             </h1>
-            <span className="text-xs">Alamat lain akan dipindahkan ke customer yang dipilih</span>
+            <span className="text-xs">
+              Alamat lain akan dipindahkan ke customer yang dipilih
+            </span>
           </div>
         </div>
-  <div className="flex grow justify-end">
-    {selectedCustomer&&
-    <button
-      onClick={handleMerge}
-      className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shadow-sm transition"
-    >
-      {isPending?"Loading...":"Merge"}
-    </button>
-    }
-  </div>
-
+        <div className="flex grow justify-end">
+          {selectedCustomer && (
+            <button
+              onClick={handleClickMerge}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shadow-sm transition"
+            >
+              {isPending ? "Loading..." : "Merge"}
+            </button>
+          )}
+        </div>
       </div>
       {/* Body */}
 
@@ -83,7 +99,7 @@ export function MergeCustomer() {
                 name="selectedCustomer"
                 //   checked={false}
                 onChange={() => {
-                  setSelectedCustomer(each.id)
+                  setSelectedCustomer(each.id);
                 }}
                 className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
               />
@@ -111,6 +127,36 @@ export function MergeCustomer() {
           </div>
         ))}
       </div>
+      <PopupModal visible={showConfirm}>
+        <div className=" space-y-4">
+          <p className="text-gray-700">
+            Data alamat dan service akan dipindahkan ke{" "}
+            <span className="font-semibold ">
+              {data.find((each) => each.id === selectedCustomer)?.name}
+            </span>
+          </p>
+          <p className="text-gray-700">
+            Customer lainnya akan <b>dihapus</b>
+          </p>
+          <div className="flex justify-center">
+            <CiWarning size={50} className="text-orange-700" />
+          </div>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleMerge}
+              className="px-4 py-2 rounded-full bg-orange-800 hover:opacity-50 text-white font-semibold transition cursor-pointer"
+            >
+              {isPending ? "Loading..." : "Confirm"}
+            </button>
+          </div>
+        </div>
+      </PopupModal>
     </div>
   );
 }
