@@ -35,6 +35,8 @@ const CustomerSchema = z.object({
   addresses: z.array(AddressSchema).nullable().optional(),
 });
 
+export const MergeCustomerSchema = z.array(CustomerSchema)
+
 export type ICustomer = z.infer<typeof CustomerSchema>
 
 const SigninSchema = z.object({
@@ -74,6 +76,12 @@ type NewAddressDto = {
     customer_id:string;
     latitude:number|undefined|null;
     longitude:number|undefined|null;
+}
+
+type MergeAddressDto = {
+  customer_id:string;
+  address_list:string[];
+  unused_customer_list:string[]
 }
 
 type NewServiceDto = {
@@ -218,7 +226,6 @@ export function useGetSingleCustomer(id:string){
   };
 }
 
-
 export function useEditCustomer(){
   const queryClient = useQueryClient();
   const {mutate,isPending} = useMutation({
@@ -311,6 +318,25 @@ export function useDeleteAddress(){
   }
   })
   return {mutate,isPending}
+}
+
+export function useMergeAddress(){
+  const queryClient = useQueryClient()
+  const {mutate,isError,isPending} = useMutation({
+    mutationFn:async(data:MergeAddressDto)=>{
+      const token = sessionStorage.getItem("token");
+      const resp = await axios.post("api/addresses/merge",data,{headers:{Authorization:`Bearer ${token}`}})
+      if (resp.status!=200) throw new Error("Can't merge, try again later")
+    },
+  onError:(e)=>{
+    toast.error(e.message)
+  },
+  onSuccess:()=>{
+    toast.success("Address updated")
+    queryClient.invalidateQueries({queryKey:["allCustomer"]})
+  }
+  })
+  return {mutate,isError,isPending}
 }
 
 //Service
