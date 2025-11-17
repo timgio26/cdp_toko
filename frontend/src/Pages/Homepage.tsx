@@ -36,6 +36,7 @@ export function Homepage() {
   const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
   const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<ICustomer>();
+  const [isDownloading,setIsDownloading] = useState<boolean>(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -82,8 +83,10 @@ export function Homepage() {
     }
   }
 
-  function handleDownload(){
-    downloadData()
+  async function handleDownload(){
+    setIsDownloading(true)
+    await downloadData()
+    setIsDownloading(false)
   }
 
 
@@ -133,7 +136,7 @@ export function Homepage() {
                   </div>
                   <div className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded transition bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-900 cursor-pointer"
                   onClick={handleDownload}>
-                    Download Data
+                    {isDownloading?"Loading...":"Download Data"}
                   </div>
                 </div>
 

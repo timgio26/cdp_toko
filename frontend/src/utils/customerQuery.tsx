@@ -418,6 +418,6 @@ export async function downloadData(){
     link.remove();
     toast.success("File downloaded");
   } catch (error) {
-    toast.error("cant download")
+    toast.error("Can't download")
   }
 };
