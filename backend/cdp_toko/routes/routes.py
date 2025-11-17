@@ -1,4 +1,4 @@
-from flask import Blueprint,jsonify,request,redirect
+from flask import Blueprint,jsonify,request,send_file
 from cdp_toko.extension import db
 from cdp_toko.models.models import UserCdp,Customer,Address,Service,AddressMerge
 from cdp_toko.models.dtos import SignInDTO
@@ -7,8 +7,9 @@ from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from uuid import UUID
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
-import os
-
+import pandas as pd
+from io import BytesIO
+from sqlalchemy import text
 
 main_bp = Blueprint('main', __name__)
 
@@ -221,3 +222,44 @@ def delete_service(id):
     db.session.commit()
     return '',204  
 
+@main_bp.get('/download')
+@jwt_required()
+def download_data():
+    # Raw SQL query
+    query = """
+        SELECT
+          customer.id AS customer_id,
+          customer.name,
+          customer.phone,
+          customer.joined_date,
+          address.id AS address_id,
+          address.address,
+          address.kategori,
+          address.phone AS address_phone,
+          service.id AS service_id,
+          service.service_date,
+          service.complaint,
+          service.action_taken,
+          service.result
+        FROM customer
+        LEFT JOIN address ON customer.id = address.customer_id
+        LEFT JOIN service ON address.id = service.address_id;
+    """
+
+    # Run query using SQLAlchemy engine
+    df = pd.read_sql_query(text(query), db.engine)
+
+    # Write to Excel in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Customers')
+
+    output.seek(0)
+
+    # Return as downloadable file
+    return send_file(
+        output,
+        download_name="customers.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
