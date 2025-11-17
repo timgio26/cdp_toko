@@ -3,7 +3,7 @@ import { z } from "zod";
 import { toast } from "react-toastify";
 import axios from "axios"; 
 import { useNavigate } from "react-router";
-import { axiosInstance } from "./myfunction";
+import { axiosInstance, get_today_date } from "./myfunction";
 
 const ServiceSchema = z.object({
   id: z.string(),
@@ -404,3 +404,20 @@ export function useEditService(){
   })
   return {mutate,isPending}
 }
+
+export async function downloadData(){
+  try {
+    const token = sessionStorage.getItem("token");
+    const response = await axios.get('api/download',{headers: { Authorization: `Bearer ${token}` },responseType:"blob"});
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `customers ${get_today_date()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast.success("File downloaded");
+  } catch (error) {
+    toast.error("cant download")
+  }
+};

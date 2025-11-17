@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link,useNavigate } from "react-router";
 
 import {
+  downloadData,
   useDeleteCustomer,
   useGetAllCustomer,
   type ICustomer,
@@ -81,6 +82,10 @@ export function Homepage() {
     }
   }
 
+  function handleDownload(){
+    downloadData()
+  }
+
 
   return (
     <div className="space-y-8">
@@ -113,7 +118,7 @@ export function Homepage() {
               <PageLoading />
             ) : (
               <>
-                <div className="mb-1">
+                <div className="flex gap-2 mb-1">
                   <div
                     onClick={handleToMergeCustomer}
                     className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded transition
@@ -125,6 +130,10 @@ export function Homepage() {
                   `}
                   >
                     Merge Customer
+                  </div>
+                  <div className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded transition bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-900 cursor-pointer"
+                  onClick={handleDownload}>
+                    Download Data
                   </div>
                 </div>
 
