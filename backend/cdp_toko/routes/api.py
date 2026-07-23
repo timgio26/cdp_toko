@@ -13,17 +13,13 @@ from sqlalchemy import text
 
 main_bp = Blueprint('main', __name__)
 
-@main_bp.route('/version')
-def version():
-    return "0.0.1",200
-
-@main_bp.get('/users')
+@main_bp.get('/api/users')
 @jwt_required()
 def list_users():
     data:list[UserCdp] = UserCdp.query.all()
     return jsonify([i.to_dict() for i in data]),200
 
-@main_bp.delete('/users/<id>')
+@main_bp.delete('/api/users/<id>')
 @jwt_required()
 def delete_user(id):
     jwt_identity = get_jwt_identity()
@@ -33,7 +29,7 @@ def delete_user(id):
         db.session.commit()
         return '',204
 
-@main_bp.post('/signup')
+@main_bp.post('/api/signup')
 def create_user():
     new_user = UserCdp(**request.json)
     new_user.password= generate_password_hash(new_user.password)
@@ -41,7 +37,7 @@ def create_user():
     db.session.commit()
     return jsonify({'message': 'User created'}), 201
 
-@main_bp.post('/signin')
+@main_bp.post('/api/signin')
 def authenticate_user():
     data = SignInDTO(**request.json)
     user:UserCdp = UserCdp.query.filter_by(username=data.username).one_or_404()
@@ -49,7 +45,7 @@ def authenticate_user():
         token = create_access_token(identity=user.username,expires_delta=False)
         return jsonify({"access_token":token}),200
     
-@main_bp.post('/customers')
+@main_bp.post('/api/customers')
 @jwt_required()
 def create_customer():
     new_user = Customer(**request.json)
@@ -57,7 +53,7 @@ def create_customer():
     db.session.commit()
     return jsonify({'message': 'Customer created','id':new_user.id}), 201
 
-@main_bp.get('/customers')
+@main_bp.get('/api/customers')
 @jwt_required()
 def get_all_customer():
     # Get pagination parameters from query string
@@ -91,14 +87,13 @@ def get_all_customer():
         "total_pages": (total + per_page - 1) // per_page #floor division operator
     }, 200
 
-
-@main_bp.get('/customers/<id>')
+@main_bp.get('/api/customers/<id>')
 @jwt_required()
 def get_customer(id):
     customer:Customer = Customer.query.get_or_404(UUID(id))
     return customer.to_dict(include_child=True), 200
 
-@main_bp.put('/customers/<id>')
+@main_bp.put('/api/customers/<id>')
 @jwt_required()
 def update_customer(id):
     customer:Customer = Customer.query.get_or_404(UUID(id))
@@ -111,7 +106,7 @@ def update_customer(id):
     db.session.commit()
     return customer.to_dict(),200
 
-@main_bp.delete('/customers/<id>')
+@main_bp.delete('/api/customers/<id>')
 @jwt_required()
 def delete_customer(id):
     customer:Customer = Customer.query.get_or_404(UUID(id))
@@ -119,7 +114,7 @@ def delete_customer(id):
     db.session.commit()
     return '',204
 
-@main_bp.post('/addresses')
+@main_bp.post('/api/addresses')
 @jwt_required()
 def create_address():
     data = request.json.copy()
@@ -130,13 +125,13 @@ def create_address():
     db.session.commit()
     return jsonify({'message': 'Address created','id':new_address.id}), 201
 
-@main_bp.get('/addresses/<id>')
+@main_bp.get('/api/addresses/<id>')
 @jwt_required()
 def get_address(id):
     address:Address = Address.query.get_or_404(UUID(id))
     return address.to_dict(include_child=True), 200
 
-@main_bp.put('/addresses/<id>')
+@main_bp.put('/api/addresses/<id>')
 @jwt_required()
 def update_address(id):
     address:Address = Address.query.get_or_404(UUID(id))
@@ -150,8 +145,7 @@ def update_address(id):
     db.session.commit()
     return address.to_dict(),200
 
-
-@main_bp.delete('/addresses/<id>')
+@main_bp.delete('/api/addresses/<id>')
 @jwt_required()
 def delete_address(id):
     address:Address = Address.query.get_or_404(UUID(id))
@@ -159,7 +153,7 @@ def delete_address(id):
     db.session.commit()
     return '',204
 
-@main_bp.post('/addresses/merge')
+@main_bp.post('/api/addresses/merge')
 @jwt_required()
 def merge_address():
     data = AddressMerge(**request.json)
@@ -183,7 +177,7 @@ def merge_address():
     db.session.commit()
     return jsonify({"status": "success", "updated": len(updated)}), 200
 
-@main_bp.post('/services')
+@main_bp.post('/api/services')
 @jwt_required()
 def create_service():
     data = request.json.copy()
@@ -193,13 +187,13 @@ def create_service():
     db.session.commit()
     return jsonify({'message': 'Service created'}), 201
 
-@main_bp.get('/services/<id>')
+@main_bp.get('/api/services/<id>')
 @jwt_required()
 def get_service(id):
     service:Service = Service.query.get_or_404(UUID(id))
     return service.to_dict(), 200
 
-@main_bp.put('/services/<id>')
+@main_bp.put('/api/services/<id>')
 @jwt_required()
 def update_service(id):
     service:Service = Service.query.get_or_404(UUID(id))
@@ -213,8 +207,7 @@ def update_service(id):
     db.session.commit()
     return service.to_dict(),200
 
-
-@main_bp.delete('/services/<id>')
+@main_bp.delete('/api/services/<id>')
 @jwt_required()
 def delete_service(id):
     service:Service = Service.query.get(UUID(id))
@@ -222,7 +215,7 @@ def delete_service(id):
     db.session.commit()
     return '',204  
 
-@main_bp.get('/download')
+@main_bp.get('/api/download')
 @jwt_required()
 def download_data():
     # Raw SQL query
