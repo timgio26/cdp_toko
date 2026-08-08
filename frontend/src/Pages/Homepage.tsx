@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link,useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import {
   downloadData,
@@ -36,8 +36,8 @@ export function Homepage() {
   const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
   const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<ICustomer>();
-  const [isDownloading,setIsDownloading] = useState<boolean>(false)
-  const navigate = useNavigate()
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -77,18 +77,17 @@ export function Homepage() {
     setUserMerge((curstate) => curstate.filter((each) => each.id != id));
   }
 
-  function handleToMergeCustomer(){
-    if(userMerge.length>1){
-      navigate("/merge-customer",{state:userMerge})
+  function handleToMergeCustomer() {
+    if (userMerge.length > 1) {
+      navigate("/merge-customer", { state: userMerge });
     }
   }
 
-  async function handleDownload(){
-    setIsDownloading(true)
-    await downloadData()
-    setIsDownloading(false)
+  async function handleDownload() {
+    setIsDownloading(true);
+    await downloadData();
+    setIsDownloading(false);
   }
-
 
   return (
     <div className="space-y-8">
@@ -121,110 +120,171 @@ export function Homepage() {
               <PageLoading />
             ) : (
               <>
-                <div className="flex gap-2 mb-1">
-                  <div
-                    onClick={handleToMergeCustomer}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded transition
-                    ${
-                      userMerge.length < 2
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-900 cursor-pointer"
-                    }
-                  `}
-                  >
-                    Merge Customer
+                {/* Table actions */}
+                <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    {userMerge.length > 0 && (
+                      <p className="text-sm text-gray-500">
+                        {userMerge.length} customer
+                        {userMerge.length !== 1 ? "s" : ""} selected
+                      </p>
+                    )}
                   </div>
-                  <div className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded transition bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-900 cursor-pointer"
-                  onClick={handleDownload}>
-                    {isDownloading?"Loading...":"Download Data"}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleToMergeCustomer}
+                      disabled={userMerge.length < 2}
+                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        userMerge.length < 2
+                          ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Merge Customer
+                    </button>
+
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white transition ${
+                        isDownloading
+                          ? "cursor-not-allowed bg-gray-400"
+                          : "bg-gray-900 hover:bg-gray-800"
+                      }`}
+                    >
+                      {isDownloading ? (
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Downloading...
+                        </>
+                      ) : (
+                        "Download Data"
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                <table className="min-w-full text-sm text-left text-gray-700 bg-white border border-gray-200 shadow">
-                  <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                    <tr>
-                      <th></th>
-                      <th className="px-6 py-3">Nama</th>
-                      <th className="px-6 py-3">No Hp</th>
-                      <th className="px-6 py-3">Alamat</th>
-                      <th className="px-6 py-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.data.map((customer) => (
-                      <tr
-                        key={customer.id}
-                        className="border-t border-gray-200 hover:bg-gray-50"
-                      >
-                        <td className="px-2">
-                          <input
-                            type="checkbox"
-                            name=""
-                            id=""
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                handleAddToList(customer);
-                              } else {
-                                handleRemoveFromList(customer.id);
-                              }
-                            }}
-                            checked={userMerge.filter((each)=>each.id==customer.id).length>0}
-                          />
-                        </td>
-                        <td className="px-6 py-4 font-medium  whitespace-nowrap">
-                          <Link
-                            to="/address-list"
-                            state={{ userId: customer.id }}
-                            className="hover:underline"
+                {/* Table  */}
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm text-gray-700">
+                      <thead className="border-b border-gray-200 bg-gray-50">
+                        <tr>
+                          <th className="w-12 px-4 py-3"></th>
+
+                          <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Name
+                          </th>
+
+                          <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Phone
+                          </th>
+
+                          <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Address
+                          </th>
+
+                          <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="divide-y divide-gray-100">
+                        {data.data.map((customer) => (
+                          <tr
+                            key={customer.id}
+                            className="transition hover:bg-gray-50"
                           >
-                            {customer.name}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4">{customer.phone}</td>
-                        <td className="px-6 py-4">
-                          <ul className="list-disc list-inside text-gray-600">
-                            {customer.addresses?.map((address) => (
-                              <li key={address.id}>{address.address}</li>
-                            ))}
-                          </ul>
-                        </td>
-                        <td className="px-6 py-4 text-right flex gap-2 justify-end">
-                          <Link
-                            to="/address-list"
-                            state={{ userId: customer.id }}
-                          >
-                            <button
-                              className="flex items-center gap-1 text-blue-600 hover:text-white hover:bg-blue-500 px-2 py-1 border border-blue-500 rounded transition"
-                              title="View"
-                            >
-                              <IoIosEye size={16} />
-                            </button>
-                          </Link>
-                          <button
-                            className="flex items-center gap-1 text-yellow-600 hover:text-white hover:bg-yellow-500 px-2 py-1 border border-yellow-500 rounded transition"
-                            title="Edit"
-                            onClick={() => {
-                              setSelectedUser(customer);
-                              setShowEditPopup(true);
-                            }}
-                          >
-                            <IoMdCreate size={16} />
-                          </button>
-                          <button
-                            className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 border border-red-500 rounded transition"
-                            title="Delete"
-                            onClick={() => {
-                              setSelectedUser(customer);
-                              setShowDelPopup(true);
-                            }}
-                          >
-                            <IoIosTrash size={16} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            <td className="px-4 py-4">
+                              <input
+                                type="checkbox"
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    handleAddToList(customer);
+                                  } else {
+                                    handleRemoveFromList(customer.id);
+                                  }
+                                }}
+                                checked={userMerge.some(
+                                  (each) => each.id === customer.id,
+                                )}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <Link
+                                to="/address-list"
+                                state={{ userId: customer.id }}
+                                className="font-medium text-gray-900 hover:text-blue-600 hover:underline"
+                              >
+                                {customer.name}
+                              </Link>
+                            </td>
+
+                            <td className="px-6 py-4 text-gray-600">
+                              {customer.phone || "-"}
+                            </td>
+
+                            <td className="px-6 py-4">
+                              {customer.addresses?.length ? (
+                                <ul className="space-y-1 text-gray-600">
+                                  {customer.addresses.map((address) => (
+                                    <li key={address.id}>{address.address}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className="text-gray-400">
+                                  No address
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <div className="flex justify-end gap-2">
+                                <Link
+                                  to="/address-list"
+                                  state={{ userId: customer.id }}
+                                >
+                                  <button
+                                    className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                    title="View"
+                                  >
+                                    <IoIosEye size={17} />
+                                  </button>
+                                </Link>
+
+                                <button
+                                  className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:border-yellow-200 hover:bg-yellow-50 hover:text-yellow-600"
+                                  title="Edit"
+                                  onClick={() => {
+                                    setSelectedUser(customer);
+                                    setShowEditPopup(true);
+                                  }}
+                                >
+                                  <IoMdCreate size={17} />
+                                </button>
+
+                                <button
+                                  className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                  title="Delete"
+                                  onClick={() => {
+                                    setSelectedUser(customer);
+                                    setShowDelPopup(true);
+                                  }}
+                                >
+                                  <IoIosTrash size={17} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </>
             )}
             <div className="flex justify-end">

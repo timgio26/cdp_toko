@@ -11,7 +11,7 @@ export default defineConfig({
         target: 'http://localhost:5000',
         // target:'https://timgio26.pythonanywhere.com',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, '')
+        // rewrite: path => path.replace(/^\/api/, '')
       }
     }
   }

@@ -51,6 +51,62 @@ const AllCustomerListSchema = z.object({
   total_pages:z.number()
 })
 
+
+export const DashboardSchema = z.object({
+  stats: z.object({
+    customers: z.number(),
+    addresses: z.number(),
+    services: z.number(),
+    services_this_month: z.number(),
+    new_customers_this_month: z.number(),
+  }),
+
+  categories: z.array(
+    z.object({
+      name: z.string().nullable(),
+      count: z.number(),
+    })
+  ),
+
+  // service_results: z.array(
+  //   z.object({
+  //     result: z.string().nullable(),
+  //     count: z.number(),
+  //   })
+  // ),
+
+  attention: z.object({
+    customers_without_services: z.number(),
+    addresses_without_services: z.number(),
+  }),
+
+  recent_services: z.array(
+    z.object({
+      id: z.string(),
+      customer: z.string(),
+      address: z.string(),
+      date: z.string(),
+      result: z.string().nullable(),
+    })
+  ),
+
+  top_customers: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      services: z.number(),
+    })
+  ),
+  services_by_month: z.array(
+    z.object({
+      month: z.string(),
+      count: z.number(),
+    }))
+})
+
+
+export type DashboardDto = z.infer<typeof DashboardSchema>
+
 type SignupDto = {
   username: string;
   name:string;
@@ -103,7 +159,7 @@ type EditServiceDto = {
 export function useSignUp(){
   const {mutate,isError,isPending} = useMutation({
     mutationFn:async(data:SignupDto)=>{
-      const resp = await axios.post('api/signup',data)
+      const resp = await axios.post('/api/signup',data)
       if(resp.status!=201){
         throw new Error("signup error")
       }
@@ -123,7 +179,7 @@ export function useSignIn(){
   const navigate = useNavigate()
   const {mutate,isError,isPending} = useMutation({
     mutationFn:async(data:SigninDto)=>{
-      const resp = await axios.post('api/signin',data)
+      const resp = await axios.post('/api/signin',data)
       if(resp.status!=200){
         throw new Error("Signin error")
       }
@@ -152,7 +208,7 @@ export function useGetAllCustomer(page:number,search:string|undefined) {
     queryKey: ["allCustomer",page,search],
     queryFn: async()=>{
       const token = sessionStorage.getItem("token");
-      const resp = await axiosInstance.get(`api/customers?page=${page}&search=${search}`,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axiosInstance.get(`/api/customers?page=${page}&search=${search}`,{headers:{Authorization:`Bearer ${token}`}})
       return resp.data
     },
     retry: false,
@@ -174,7 +230,7 @@ export function useCreateNewCustomer() {
   const queryClient = useQueryClient();
   const { mutate: createNewCustomer, isPending } = useMutation({
     mutationFn: async(data:NewCustomerDto)=>{
-      const resp = await axios.post(`api/customers`,data,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.post(`/api/customers`,data,{headers:{Authorization:`Bearer ${token}`}})
       if(resp.status!=201){
         throw new Error("Cant add new customer")
       }
@@ -195,7 +251,7 @@ export function useDeleteCustomer(){
   const queryClient = useQueryClient();
   const {mutate,isError,isPending} =useMutation({
     mutationFn:async(id:string)=>{
-      await axios.delete(`api/customers/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      await axios.delete(`/api/customers/${id}`,{headers:{Authorization:`Bearer ${token}`}})
     },
     onSuccess:()=>{
       queryClient.invalidateQueries({ queryKey: ["allCustomer"] });
@@ -213,7 +269,7 @@ export function useGetSingleCustomer(id:string){
   const {data,isLoading,isError}=useQuery({
     queryKey:['singleCustomer',id],
     queryFn:async()=>{
-      const resp = await axios.get(`api/customers/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.get(`/api/customers/${id}`,{headers:{Authorization:`Bearer ${token}`}})
       return resp.data
     },
     retry:false
@@ -231,7 +287,7 @@ export function useEditCustomer(){
   const {mutate,isPending} = useMutation({
     mutationFn:async(data:ICustomer)=>{
       const token = sessionStorage.getItem("token");
-      const resp = await axios.put(`api/customers/${data.id}`,data,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.put(`/api/customers/${data.id}`,data,{headers:{Authorization:`Bearer ${token}`}})
       if(resp.status!=200) throw new Error("Can't edit Customer")
     },
     onError:(e)=>{
@@ -251,7 +307,7 @@ export function useCreateNewAddress(){
   const token = sessionStorage.getItem("token");
   const {mutate:CreateNewAddress,isPending} = useMutation({
     mutationFn:async(data:NewAddressDto)=>{
-      const resp = await axios.post(`api/addresses`,data,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.post(`/api/addresses`,data,{headers:{Authorization:`Bearer ${token}`}})
       return resp.data
     },
     onSuccess:()=>{
@@ -269,7 +325,7 @@ export function useGetAddress(id:string){
   const {data,isLoading,isError}=useQuery({
     queryKey:['Address',id],
     queryFn:async()=>{
-      const resp = await axios.get(`api/addresses/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.get(`/api/addresses/${id}`,{headers:{Authorization:`Bearer ${token}`}})
       return resp.data
     },
     retry:false
@@ -287,7 +343,7 @@ export function useEditAddress(){
   const {mutate,isPending} = useMutation({
     mutationFn:async(data:IAddress)=>{
       const token = sessionStorage.getItem("token");
-      const resp = await axios.put(`api/addresses/${data.id}`,data,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.put(`/api/addresses/${data.id}`,data,{headers:{Authorization:`Bearer ${token}`}})
       if (resp.status!=200)throw new Error("Can't update address, try again later")
     },
     onError:(e)=>{
@@ -306,7 +362,7 @@ export function useDeleteAddress(){
   const {mutate,isPending} = useMutation({
     mutationFn:async(id:string)=>{
       const token = sessionStorage.getItem("token");
-      const resp = await axios.delete(`api/addresses/${id}`,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.delete(`/api/addresses/${id}`,{headers:{Authorization:`Bearer ${token}`}})
       if (resp.status!=204) throw new Error("Can't delete address, try again later")
     },
   onError:(e)=>{
@@ -325,7 +381,7 @@ export function useMergeAddress(){
   const {mutate,isError,isPending} = useMutation({
     mutationFn:async(data:MergeAddressDto)=>{
       const token = sessionStorage.getItem("token");
-      const resp = await axios.post("api/addresses/merge",data,{headers:{Authorization:`Bearer ${token}`}})
+      const resp = await axios.post("/api/addresses/merge",data,{headers:{Authorization:`Bearer ${token}`}})
       if (resp.status!=200) throw new Error("Can't merge, try again later")
     },
   onError:(e)=>{
@@ -345,7 +401,7 @@ export function useCreateNewService(){
   const token = sessionStorage.getItem("token");
   const {mutate:CreateNewService,isPending} = useMutation({
     mutationFn:async(data:NewServiceDto)=>{
-          const resp = await axios.post(`api/services`,data,{headers:{Authorization:`Bearer ${token}`}})
+          const resp = await axios.post(`/api/services`,data,{headers:{Authorization:`Bearer ${token}`}})
           if (resp.status!=201) throw new Error("cant add service")
     },
     onError:()=>{
@@ -365,7 +421,7 @@ export function useDeleteService() {
     // mutationKey: [id],
     mutationFn: async (id: string) => {
       const token = sessionStorage.getItem("token");
-      const resp = await axios.delete(`api/services/${id}`, {
+      const resp = await axios.delete(`/api/services/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (resp.status != 204)
@@ -387,7 +443,7 @@ export function useEditService(){
   const {mutate,isPending} = useMutation({
     mutationFn:async(data:EditServiceDto)=>{
       const token = sessionStorage.getItem("token");
-      const resp = await axios.put(`api/services/${data.id}`,data, {
+      const resp = await axios.put(`/api/services/${data.id}`,data, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if(resp.status!=200){
@@ -408,7 +464,7 @@ export function useEditService(){
 export async function downloadData(){
   try {
     const token = sessionStorage.getItem("token");
-    const response = await axios.get('api/download',{headers: { Authorization: `Bearer ${token}` },responseType:"blob"});
+    const response = await axios.get('/api/download',{headers: { Authorization: `Bearer ${token}` },responseType:"blob"});
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -421,3 +477,41 @@ export async function downloadData(){
     toast.error("Can't download")
   }
 };
+
+
+
+export function useGetDashboard() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["dashboard"],
+
+    queryFn: async () => {
+      const token = sessionStorage.getItem("token")
+
+      const resp = await axiosInstance.get("/api/dashboard", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const parsed = DashboardSchema.safeParse(resp.data)
+
+      if (!parsed.success) {
+        throw new Error("Invalid dashboard response")
+      }
+
+      return parsed.data
+    },
+
+    retry: false,
+  })
+
+  if (isError) {
+    toast.error("Can't load dashboard, please try again later")
+  }
+
+  return {
+    data: data ?? null,
+    isLoading,
+    isError,
+  }
+}

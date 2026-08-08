@@ -5,11 +5,12 @@ from cdp_toko.models.dtos import SignInDTO
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from uuid import UUID
-from sqlalchemy import or_
+from sqlalchemy import or_,func
 from sqlalchemy.orm import joinedload
 import pandas as pd
 from io import BytesIO
 from sqlalchemy import text
+from datetime import date
 
 main_bp = Blueprint('main', __name__)
 
@@ -256,3 +257,242 @@ def download_data():
         as_attachment=True,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+@main_bp.get('/api/dashboard')
+def get_dashboard():
+
+    # =====================================================
+    # BASIC STATS
+    # =====================================================
+
+    total_customers = Customer.query.count()
+    total_addresses = Address.query.count()
+    total_services = Service.query.count()
+
+    # =====================================================
+    # DATE HELPERS
+    # =====================================================
+
+    today = date.today()
+    first_day_of_month = today.replace(day=1)
+
+    # =====================================================
+    # SERVICES THIS MONTH
+    # =====================================================
+
+    services_this_month = (
+        Service.query
+        .filter(
+            Service.service_date >= first_day_of_month,
+            Service.service_date <= today
+        )
+        .count()
+    )
+
+    # =====================================================
+    # NEW CUSTOMERS THIS MONTH
+    # =====================================================
+
+    new_customers_this_month = (
+        Customer.query
+        .filter(
+            Customer.joined_date >= first_day_of_month,
+            Customer.joined_date <= today
+        )
+        .count()
+    )
+
+    # =====================================================
+    # MONTHLY SERVICE
+    # =====================================================
+    today = date.today()
+
+    # First day of the month 11 months ago
+    month_number = today.month - 11
+    year = today.year
+
+    while month_number <= 0:
+        month_number += 12
+        year -= 1
+
+    first_day_12_months = date(year, month_number, 1)
+
+    monthly_service_rows = (
+        db.session.query(
+            func.date_format(
+                Service.service_date,
+                "%Y-%m"
+            ).label("month"),
+            func.count(Service.id).label("count")
+        )
+        .filter(
+            Service.service_date >= first_day_12_months,
+            Service.service_date <= today
+        )
+        .group_by(
+            func.date_format(
+                Service.service_date,
+                "%Y-%m"
+            )
+        )
+        .order_by(
+            func.date_format(
+                Service.service_date,
+                "%Y-%m"
+            )
+        )
+        .all()
+        )
+
+    services_by_month = [
+        {
+            "month": month,
+            "count": count
+        }
+        for month, count in monthly_service_rows
+    ]
+
+    # =====================================================
+    # ADDRESS CATEGORIES
+    # =====================================================
+
+    category_rows = (
+        db.session.query(
+            Address.kategori,
+            func.count(Address.id)
+        )
+        .group_by(Address.kategori)
+        .all()
+    )
+
+    categories = [
+        {
+            "name": kategori,
+            "count": count
+        }
+        for kategori, count in category_rows
+    ]
+
+    # =====================================================
+    # SERVICE RESULTS
+    # =====================================================
+
+    result_rows = (
+        db.session.query(
+            Service.result,
+            func.count(Service.id)
+        )
+        .group_by(Service.result)
+        .all()
+    )
+
+    service_results = [
+        {
+            "result": result,
+            "count": count
+        }
+        for result, count in result_rows
+    ]
+
+    # =====================================================
+    # CUSTOMERS WITHOUT SERVICES
+    # =====================================================
+
+    customers_without_services = (
+        db.session.query(Customer.id)
+        .join(Address, Address.customer_id == Customer.id)
+        .outerjoin(Service, Service.address_id == Address.id)
+        .group_by(Customer.id)
+        .having(func.count(Service.id) == 0)
+        .count()
+    )
+
+    # =====================================================
+    # ADDRESSES WITHOUT SERVICES
+    # =====================================================
+
+    addresses_without_services = (
+        db.session.query(Address)
+        .outerjoin(Service, Service.address_id == Address.id)
+        .filter(Service.id.is_(None))
+        .count()
+    )
+
+    # =====================================================
+    # RECENT SERVICES
+    # =====================================================
+
+    recent_services = (
+        db.session.query(Service, Address, Customer)
+        .join(Address, Service.address_id == Address.id)
+        .join(Customer, Address.customer_id == Customer.id)
+        .order_by(Service.service_date.desc())
+        .limit(5)
+        .all()
+    )
+
+    recent_services_data = [
+        {
+            "id": str(service.id),
+            "customer": customer.name,
+            "address": address.address,
+            "date": str(service.service_date),
+            "result": service.result
+        }
+        for service, address, customer in recent_services
+    ]
+
+    # =====================================================
+    # MOST ACTIVE CUSTOMERS
+    # =====================================================
+
+    top_customer_rows = (
+        db.session.query(
+            Customer.id,
+            Customer.name,
+            func.count(Service.id).label("service_count")
+        )
+        .join(Address, Address.customer_id == Customer.id)
+        .join(Service, Service.address_id == Address.id)
+        .group_by(Customer.id, Customer.name)
+        .order_by(func.count(Service.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    top_customers = [
+        {
+            "id": str(customer_id),
+            "name": name,
+            "services": service_count
+        }
+        for customer_id, name, service_count in top_customer_rows
+    ]
+
+    # =====================================================
+    # RESPONSE
+    # =====================================================
+
+    return jsonify({
+        "stats": {
+            "customers": total_customers,
+            "addresses": total_addresses,
+            "services": total_services,
+            "services_this_month": services_this_month,
+            "new_customers_this_month": new_customers_this_month,
+        },
+
+        "categories": categories,
+
+        # "service_results": service_results,
+
+        "attention": {
+            "customers_without_services": customers_without_services,
+            "addresses_without_services": addresses_without_services,
+        },
+
+        "recent_services": recent_services_data,
+
+        "top_customers": top_customers,
+        "services_by_month": services_by_month
+    })

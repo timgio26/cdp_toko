@@ -9,7 +9,8 @@ import {
   Service,
   Authentication,
   ProtectedPage,
-  MergeCustomer
+  MergeCustomer,
+  Dashboard
 } from "./Pages/Index.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -25,6 +26,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/merge-customer" element={<ProtectedPage><MergeCustomer/></ProtectedPage>}/>
             <Route path="/address-list" element={<ProtectedPage><Address /></ProtectedPage>}/>
             <Route path="/service-list"element={<ProtectedPage><Service /></ProtectedPage>}/>
+            <Route path="/dashboard"element={<ProtectedPage><Dashboard /></ProtectedPage>}/>
             <Route path="/authentication" element={<Authentication />} />
           </Route>
         </Routes>
