@@ -14,6 +14,7 @@ import { PopupModal } from "../Components/PopupModal";
 import { EditAddressForm } from "../Components/EditAddressForm";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { CiCircleChevLeft } from "react-icons/ci";
+import {PageLoading} from "./PageLoading"
 
 const AddressPageSchema = z.object({
   key: z.string(),
@@ -24,30 +25,41 @@ const AddressPageSchema = z.object({
 });
 
 export function Address() {
-  const location = useLocation();
-  const parseResult = AddressPageSchema.safeParse(location);
-  const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
-  const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
-  const [selectedAddress, setSelectedAddress] = useState<IAddress>();
-  const { mutate: deleteAddress, isPending } = useDeleteAddress();
-  function handleDelete() {
-    if (selectedAddress) {
-      deleteAddress(selectedAddress.id, {
+const location = useLocation();
+
+const parseResult = AddressPageSchema.safeParse(location);
+
+const [showEditPopup, setShowEditPopup] = useState(false);
+const [showDelPopup, setShowDelPopup] = useState(false);
+const [selectedAddress, setSelectedAddress] = useState<IAddress>();
+
+const { mutate: deleteAddress, isPending: isDeleting } = useDeleteAddress();
+
+function handleDelete() {
+    if (!selectedAddress) return;
+
+    deleteAddress(selectedAddress.id, {
         onSuccess: () => {
-          setShowDelPopup(false);
+            setShowDelPopup(false);
         },
-      });
-    }
-  }
+    });
+}
 
-  if (!parseResult.success) return <ErrorBackToHome />;
+if (!parseResult.success) {
+    return <ErrorBackToHome />;
+}
 
-  const { data, isLoading, isError } = useGetSingleCustomer(
+const { data, isLoading, isError } = useGetSingleCustomer(
     parseResult.data.state.userId
-  );
+);
 
-  if (!isLoading && isError) return <ErrorBackToHome />;
-  if (!data) return <ErrorBackToHome />;
+if (isLoading) {
+    return <PageLoading />;
+}
+
+if (isError || !data) {
+    return <ErrorBackToHome />;
+}
 
   return (
     <>
@@ -144,7 +156,7 @@ export function Address() {
                     data-testid="confirmButton"
                     className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-sm font-medium text-white transition"
                   >
-                    {isPending ? "Loading" : "Delete"}
+                    {isDeleting ? "Loading" : "Delete"}
                   </button>
                 </div>
               </>

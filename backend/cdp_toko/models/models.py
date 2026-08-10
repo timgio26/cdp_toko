@@ -3,8 +3,6 @@ from sqlalchemy.orm import Mapped,mapped_column,relationship
 from uuid import uuid4,UUID
 from datetime import date
 
-
-
 class UserCdp(db.Model):
     id:Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     name:Mapped[str] = mapped_column(db.String(60))
@@ -98,22 +96,3 @@ class AddressMerge():
         self.address_list = address_list
         self.unused_customer_list=unused_customer_list
 
-
-# class Product(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(64))
-#     price = db.Column(db.Integer)
-#     discount_price = db.Column(db.Integer)
-#     image_url = db.Column(db.String(64))
-#     description = db.Column(db.Text)
-
-# class TrialApi(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(120))
-#     city = db.Column(db.String(120))
-
-# class MyCart(db.Model):
-    # id = db.Column(db.Integer, primary_key=True)
-    # username = db.Column(db.String(60))
-    # item_id = db.Column(db.Integer)
-    # item_qty = db.Column(db.Integer)
