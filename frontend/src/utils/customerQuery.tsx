@@ -204,7 +204,7 @@ export function useSignIn(){
 //Customer
 
 export function useGetAllCustomer(page:number,search:string|undefined) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ["allCustomer",page,search],
     queryFn: async()=>{
       const token = sessionStorage.getItem("token");
@@ -220,7 +220,7 @@ export function useGetAllCustomer(page:number,search:string|undefined) {
   const parseResult = AllCustomerListSchema.safeParse(data);
   return {
     data: parseResult.success ? parseResult.data : null,
-    isLoading,
+    isPending,
     isError: isError || !parseResult.success,
   };
 }

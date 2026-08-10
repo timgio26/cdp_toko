@@ -2,11 +2,25 @@ import { Outlet, useNavigate } from "react-router";
 import { ToastContainer } from "react-toastify";
 import logoSP from "./assets/android-chrome-192x192.png";
 import { CiLogout } from "react-icons/ci";
+import { NavLink } from "react-router";
+import {
+  FiChevronDown,
+  FiGrid,
+  FiUsers,
+  FiBox,
+  FiTruck,
+  FiTag,
+  FiActivity,
+} from "react-icons/fi";
+import { useState } from "react";
 
 function App() {
   const navigate = useNavigate();
   const year = new Date().getFullYear();
   const token = sessionStorage.getItem("token");
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [csmOpen, setCsmOpen] = useState(false);
+
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
@@ -46,14 +60,177 @@ function App() {
           <div className="flex items-center gap-2">
             {token && (
               <>
-                {/* Dashboard */}
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard")}
-                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                >
-                  <span>Dashboard</span>
-                </button>
+                {/* CSM Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {setCsmOpen((prev) => !prev);setInventoryOpen(false);}}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      location.pathname.startsWith("/csm")
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <FiUsers size={17} />
+
+                    <span>CSM</span>
+
+                    <FiChevronDown
+                      size={15}
+                      className={`transition-transform ${
+                        csmOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {csmOpen && (
+                    <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                      {/* CSM Dashboard */}
+                      <NavLink
+                        to="/dashboard"
+                        end
+                        onClick={() => setCsmOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiGrid size={16} />
+                        <span>Dashboard</span>
+                      </NavLink>
+
+                      {/* Customers */}
+                      <NavLink
+                        to="/"
+                        onClick={() => setCsmOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiUsers size={16} />
+                        <span>Customers</span>
+                      </NavLink>
+                    </div>
+                  )}
+                </div>
+
+                {/* Inventory Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {setInventoryOpen((prev) => !prev);setCsmOpen(false);}}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      location.pathname.startsWith("/inventory")
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <FiBox size={17} />
+
+                    <span>Inventory</span>
+
+                    <FiChevronDown
+                      size={15}
+                      className={`transition-transform ${
+                        inventoryOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {inventoryOpen && (
+                    <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                      {/* Dashboard */}
+                      <NavLink
+                        to="/inventory"
+                        end
+                        onClick={() => setInventoryOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiGrid size={16} />
+                        <span>Dashboard</span>
+                      </NavLink>
+
+                      {/* Products */}
+                      <NavLink
+                        to="/inventory/product"
+                        onClick={() => setInventoryOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiBox size={16} />
+                        <span>Products</span>
+                      </NavLink>
+
+                      {/* Suppliers */}
+                      <NavLink
+                        to="/inventory/supplier"
+                        onClick={() => setInventoryOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiTruck size={16} />
+                        <span>Suppliers</span>
+                      </NavLink>
+
+                      {/* Categories */}
+                      <NavLink
+                        to="/inventory/category"
+                        onClick={() => setInventoryOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiTag size={16} />
+                        <span>Categories</span>
+                      </NavLink>
+
+                      <div className="my-1 border-t border-slate-100" />
+
+                      {/* Stock Movements */}
+                      <NavLink
+                        to="/inventory/movements"
+                        onClick={() => setInventoryOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                            isActive
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`
+                        }
+                      >
+                        <FiActivity size={16} />
+                        <span>Stock Movements</span>
+                      </NavLink>
+                    </div>
+                  )}
+                </div>
 
                 {/* Divider */}
                 <div className="mx-1 h-6 w-px bg-slate-200" />
@@ -68,6 +245,7 @@ function App() {
                     size={19}
                     className="transition-transform group-hover:-translate-x-0.5"
                   />
+
                   <span className="hidden sm:inline">Logout</span>
                 </button>
               </>

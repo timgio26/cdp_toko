@@ -400,7 +400,7 @@ def get_dashboard():
 
     customers_without_services = (
         db.session.query(Customer.id)
-        .join(Address, Address.customer_id == Customer.id)
+        .outerjoin(Address, Address.customer_id == Customer.id)
         .outerjoin(Service, Service.address_id == Address.id)
         .group_by(Customer.id)
         .having(func.count(Service.id) == 0)
