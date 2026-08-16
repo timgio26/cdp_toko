@@ -18,7 +18,7 @@ export function AddressTiles({addressData,edit_function,delete_function}:Address
 
       {/* Content */}
       <div className="space-y-2">
-        <Link to="/service-list"state={{id: addressData.id,}}className="block text-base font-semibold text-slate-800 hover:underline">
+        <Link to="/service-list" state={{id: addressData.id}} className="block text-base font-semibold text-slate-800 hover:underline">
           {addressData.address}
         </Link>
         <p className="text-sm text-gray-500">{addressData.kategori}</p>

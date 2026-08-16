@@ -130,7 +130,50 @@ def create_address():
 @jwt_required()
 def get_address(id):
     address:Address = Address.query.get_or_404(UUID(id))
-    return address.to_dict(include_child=True), 200
+    return address.to_dict(), 200
+
+@main_bp.get("/api/addresses/<id>/services")
+@jwt_required()
+def list_address_services(id):
+    address = Address.query.get_or_404(UUID(id))
+
+    page = max(
+        request.args.get("page", 1, type=int),
+        1,
+    )
+
+    per_page = min(
+        max(
+            request.args.get("per_page", 10, type=int),
+            1,
+        ),
+        100,
+    )
+
+    pagination = Service.query.filter(
+        Service.address_id == address.id
+    ).order_by(
+        Service.service_date.desc()
+    ).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False,
+    )
+
+    return jsonify({
+        "items": [
+            service.to_dict()
+            for service in pagination.items
+        ],
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev,
+        },
+    }), 200
 
 @main_bp.put('/api/addresses/<id>')
 @jwt_required()
