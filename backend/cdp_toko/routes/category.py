@@ -17,11 +17,34 @@ def create_category():
     return jsonify(category.to_dict()), 201
 
 
-@categories_bp.get('/')
+@categories_bp.get("/")
 @jwt_required()
 def list_categories():
-    categories = Category.query.all()
-    return jsonify([c.to_dict() for c in categories]), 200
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+
+    pagination = Category.query.order_by(
+        Category.name.asc()
+    ).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False,
+    )
+
+    return jsonify({
+        "items": [
+            category.to_dict()
+            for category in pagination.items
+        ],
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev,
+        },
+    }), 200
 
 
 @categories_bp.put('/<uuid:id>')
