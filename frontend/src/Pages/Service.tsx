@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router";
 import { z } from "zod";
 import { formatBeautifulDate } from "../utils/myfunction";
-import { useDeleteService, useGetAddress, type IService } from "../utils/customerQuery";
+import { useDeleteService, useGetAddress, useGetServices, type IService } from "../utils/customerQuery";
 import { PageLoading } from "./Index";
 import { NewServiceModalFormGroup } from "../Components/NewServiceModalFormGroup";
 import { ErrorBackToHome } from "../Components/ErrorBackToHome";
@@ -10,6 +10,7 @@ import { PopupModal } from "../Components/PopupModal";
 import { EditServiceForm } from "../Components/EditServiceForm";
 import { CiCircleChevLeft } from "react-icons/ci";
 import { IoIosTrash, IoMdCreate ,IoIosCloseCircleOutline} from "react-icons/io";
+import { Pagination } from "../Components/Pagination";
 
 const ServicePageSchema = z.object({
   key: z.string(),
@@ -21,11 +22,14 @@ const ServicePageSchema = z.object({
 
 export function Service() {
   const location = useLocation();
+  const { data, success } = ServicePageSchema.safeParse(location);
   const { mutate: deleteService, isPending } = useDeleteService();
   const [showDelPopup, setShowDelPopup] = useState<boolean>(false);
   const [showEditPopup, setShowEditPopup] = useState<boolean>(false);
   const [editData,setEditData] = useState<IService>()
   const [delId, setDelId] = useState<string>("");
+  const [page,setPage] = useState(1)
+  const {services,pagination} = useGetServices(data?data.state.id:"",page,10)
 
   function handleDeleteService() {
     deleteService(delId, {
@@ -35,7 +39,6 @@ export function Service() {
     });
   }
 
-  const { data, success } = ServicePageSchema.safeParse(location);
   if (!success) return <ErrorBackToHome />;
   const {
     data: address_data,
@@ -45,7 +48,7 @@ export function Service() {
   if (isLoading) return <PageLoading />;
   if (!address_data || isError) return <ErrorBackToHome />;
 
-  const services= address_data.services?.sort((a,b)=>a.service_date<b.service_date?1:-1)
+  const services_sorted= services.sort((a,b)=>a.service_date<b.service_date?1:-1)
   // console.log(services)
 
   return (
@@ -83,7 +86,7 @@ export function Service() {
               </tr>
             </thead>
             <tbody>
-              {services.map((each, index) => (
+              {services_sorted.map((each, index) => (
                 <tr
                   key={index}
                   className="bg-white rounded-xl shadow-sm transition hover:shadow-md"
@@ -126,6 +129,7 @@ export function Service() {
               ))}
             </tbody>
           </table>
+          <Pagination page={pagination? pagination.page : 1} total_page={pagination? pagination.pages : 1} onNext={()=>setPage((curpage)=>curpage+1)} onPrev={()=>setPage((curpage)=>curpage-1)}/>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center text-center text-gray-500 py-12">

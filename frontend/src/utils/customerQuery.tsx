@@ -395,7 +395,80 @@ export function useMergeAddress(){
   return {mutate,isError,isPending}
 }
 
+
+const PaginationSchema = z.object({
+  page: z.number(),
+  per_page: z.number(),
+  total: z.number(),
+  pages: z.number(),
+  has_next: z.boolean(),
+  has_prev: z.boolean(),
+});
+
+const ServicesResponseSchema = z.object({
+  items: z.array(ServiceSchema),
+  pagination: PaginationSchema,
+});
+
+export type Service = z.infer<typeof ServiceSchema>;
+export type ServicesResponse = z.infer<
+  typeof ServicesResponseSchema
+>;
+
 //Service
+export function useGetServices(
+  addressId: string,
+  page = 1,
+  perPage = 10,
+) {
+  const token = sessionStorage.getItem("token");
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["AddressServices", addressId, page, perPage],
+
+    queryFn: async () => {
+      const resp = await axios.get(
+        `/api/addresses/${addressId}/services`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            page,
+            per_page: perPage,
+          },
+        },
+      );
+
+      return resp.data;
+    },
+
+    enabled: Boolean(addressId),
+    retry: false,
+  });
+
+  const parseResult = ServicesResponseSchema.safeParse(data);
+
+  return {
+    services: parseResult.success
+      ? parseResult.data.items
+      : [],
+
+    pagination: parseResult.success
+      ? parseResult.data.pagination
+      : null,
+
+    isLoading,
+    isError: isError || (!!data && !parseResult.success),
+    error,
+  };
+}
+
 export function useCreateNewService(){
   const queryClient = useQueryClient()
   const token = sessionStorage.getItem("token");
@@ -408,7 +481,7 @@ export function useCreateNewService(){
       toast.error("Can't add service. Try again later")
     },
     onSuccess:()=>{
-      queryClient.invalidateQueries({ queryKey: ["Address"] });
+      queryClient.invalidateQueries({ queryKey: ["AddressServices"] });
       toast.success("Service added")
     }
   })
@@ -431,7 +504,7 @@ export function useDeleteService() {
       toast.error(e.message)
     },
     onSuccess:()=>{
-      queryClient.invalidateQueries({ queryKey: ["Address"] });
+      queryClient.invalidateQueries({ queryKey: ["AddressServices"] });
       toast.success("Service deleted")
     }
   });
@@ -455,7 +528,7 @@ export function useEditService(){
     },
     onSuccess:()=>{
       toast.success("Service updated")
-      queryClient.invalidateQueries({ queryKey: ["Address"] });
+      queryClient.invalidateQueries({ queryKey: ["AddressServices"] });
     }
   })
   return {mutate,isPending}
