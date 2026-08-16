@@ -26,7 +26,6 @@ function App() {
     sessionStorage.removeItem("token");
     navigate("/authentication");
   };
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-gray-800 font-sans">
       {/* Header */}
@@ -215,7 +214,7 @@ function App() {
 
                       {/* Stock Movements */}
                       <NavLink
-                        to="/inventory/movements"
+                        to="/inventory/movement"
                         onClick={() => setInventoryOpen(false)}
                         className={({ isActive }) =>
                           `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${

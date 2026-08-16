@@ -11,7 +11,10 @@ import {
   ProtectedPage,
   MergeCustomer,
   Dashboard,
-  PageNotFound
+  PageNotFound,
+  Category,
+  Supplier,
+  Product,StockMovement
 } from "./Pages/Index.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -28,9 +31,12 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/address-list" element={<ProtectedPage><Address /></ProtectedPage>}/>
             <Route path="/service-list" element={<ProtectedPage><Service /></ProtectedPage>}/>
             <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>}/>
-
-
-
+            <Route path="/inventory">
+              <Route path="category" element={<ProtectedPage><Category /></ProtectedPage>}/>
+              <Route path="supplier" element={<ProtectedPage><Supplier /></ProtectedPage>}/>
+              <Route path="product" element={<ProtectedPage><Product /></ProtectedPage>}/>
+              <Route path="movement" element={<ProtectedPage><StockMovement /></ProtectedPage>}/>
+            </Route>
             <Route path="/authentication" element={<Authentication />} />
             <Route path="*" element={<PageNotFound />} />
           </Route>
