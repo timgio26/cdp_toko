@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState } from "react";
 import {
   FiEdit2,
   FiPackage,
@@ -18,33 +18,20 @@ import {
 import { ProductModal } from "./ProductModal";
 import { DeleteConfirmModal } from "../../Components/DeleteConfirmModal";
 import { Pagination } from "../../Components/Pagination";
+import { useDebounce } from "../../utils/utilsHook";
 
 export function Product() {
   const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
   const [productToDelete, setProductToDelete] = useState<ProductData | null>(null);
   const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
 
-  const { products, pagination } = useProducts(page, 10, search);
+  const { products, pagination } = useProducts(page, 10, debouncedSearch);
   const { deleteProduct, isPending: isDeleting } = useDeleteProduct();
   
   const totalPages = pagination?.pages ?? 0;
-
-
-
-  useEffect(() => {
-      const timer = setTimeout(() => {
-        if (searchInput.length == 0 || searchInput.length >= 3) {
-          setSearch(searchInput);
-          setPage(1);
-        }
-      }, 500); // run this code after 500 ms
-      return () => clearTimeout(timer); // cancel previous timer
-    }, [searchInput]);
-
-
 
 
   // =========================================================
@@ -126,8 +113,8 @@ export function Product() {
 
             <input
               type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              value={search}
+              onChange={(e) => {setSearch(e.target.value);setPage(1);}}
               placeholder="Search products..."
               className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />

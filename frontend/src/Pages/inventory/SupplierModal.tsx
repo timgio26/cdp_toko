@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SupplierData } from "./Supplier";
+import type { SupplierData } from "../../utils/inventoryQuery";
 import {
   useCreateSupplier,
   useUpdateSupplier,

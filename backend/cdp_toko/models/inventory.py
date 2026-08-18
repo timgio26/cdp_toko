@@ -196,7 +196,7 @@ class StockMovement(db.Model):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow,
+        # default=datetime.utcnow,
         nullable=False,
         index=True,
     )
@@ -206,9 +206,19 @@ class StockMovement(db.Model):
     )
 
     def to_dict(self):
+        latest_movement = (
+            StockMovement.query
+            .filter_by(product_id=self.product_id)
+            .order_by(
+                StockMovement.created_at.desc(),
+                StockMovement.id.desc(),
+            )
+            .first()
+        )
+
         is_latest = bool(
-            self.product.stock_movements
-            and self.id == self.product.stock_movements[-1].id
+            latest_movement
+            and self.id == latest_movement.id
         )
 
         return {

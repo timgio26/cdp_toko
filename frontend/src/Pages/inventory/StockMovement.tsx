@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   FiArrowDown,
   FiArrowUp,
@@ -17,42 +17,62 @@ import {
 
 import { StockMovementModal } from "./StockMovementModal";
 import { DeleteConfirmModal } from "../../Components/DeleteConfirmModal";
+import { Pagination } from "../../Components/Pagination";
+import { useDebounce } from "../../utils/utilsHook";
 
 export function StockMovement() {
-  const [search, setSearch] = useState("");
-
+  // const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-
   const [selectedMovement, setSelectedMovement] =
     useState<StockMovement | null>(null);
-
   const [movementToDelete, setMovementToDelete] =
     useState<StockMovement | null>(null);
+  const [page, setPage] = useState(1);
+  // const [perPage, setPerPage] = useState(20);
+  const [search, setSearch] = useState("");
+  // const [productId, setProductId] = useState("");
+  const [movementType, setMovementType] = useState<"" | "inbound" | "outbound">(
+    "",
+  );
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
 
-  const { stockMovements: movements } = useStockMovements();
-
+  const {
+    stockMovements: movements,
+    pagination
+  } = useStockMovements({
+    page,
+    per_page: 10,
+    search:debouncedSearch,
+    // product_id: productId,
+    movement_type: movementType || undefined,
+    date_from: dateFrom,
+    date_to: dateTo,
+  });
   const { deleteStockMovement, isPending: isDeleting } =
     useDeleteStockMovement();
 
-  // =========================================================
-  // FILTER MOVEMENTS
-  // =========================================================
 
-  const filteredMovements = useMemo(() => {
-    const query = search.toLowerCase().trim();
+  // // =========================================================
+  // // FILTER MOVEMENTS
+  // // =========================================================
 
-    if (!query) {
-      return movements;
-    }
+  // const filteredMovements = useMemo(() => {
+  //   const query = search.toLowerCase().trim();
 
-    return movements.filter((movement) => {
-      return (
-        movement.product_name?.toLowerCase().includes(query) ||
-        movement.product_sku?.toLowerCase().includes(query) ||
-        movement.reason?.toLowerCase().includes(query)
-      );
-    });
-  }, [search, movements]);
+  //   if (!query) {
+  //     return movements;
+  //   }
+
+  //   return movements.filter((movement) => {
+  //     return (
+  //       movement.product_name?.toLowerCase().includes(query) ||
+  //       movement.product_sku?.toLowerCase().includes(query) ||
+  //       movement.reason?.toLowerCase().includes(query)
+  //     );
+  //   });
+  // }, [search, movements]);
 
   // =========================================================
   // CREATE
@@ -96,9 +116,6 @@ export function StockMovement() {
     return new Date(date).toLocaleString();
   };
 
-  // =========================================================
-  // RENDER
-  // =========================================================
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -138,22 +155,83 @@ export function StockMovement() {
         SEARCH
     ====================================================== */}
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="relative max-w-md">
-            <FiSearch
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
+<div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+  <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+    {/* Search */}
+    <div className="relative max-w-md flex-1">
+      <FiSearch
+        size={18}
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+      />
 
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search product, SKU, or reason..."
-              className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-            />
-          </div>
-        </div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+        placeholder="Search product, SKU, or reason..."
+        className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+      />
+    </div>
+
+    {/* Movement Type */}
+    <select
+      value={movementType}
+      onChange={(e) => {
+        setMovementType(
+          e.target.value as "" | "inbound" | "outbound",
+        );
+        setPage(1);
+      }}
+      className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+    >
+      <option value="">All movements</option>
+      <option value="inbound">Inbound</option>
+      <option value="outbound">Outbound</option>
+    </select>
+
+    {/* Date From */}
+    <input
+      type="date"
+      value={dateFrom}
+      onChange={(e) => {
+        setDateFrom(e.target.value);
+        setPage(1);
+      }}
+      className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+    />
+
+    {/* Date To */}
+    <input
+      type="date"
+      value={dateTo}
+      onChange={(e) => {
+        setDateTo(e.target.value);
+        setPage(1);
+      }}
+      className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+    />
+
+    {/* Clear Filters */}
+    {(search || movementType || dateFrom || dateTo) && (
+      <button
+        type="button"
+        onClick={() => {
+          setSearch("");
+          setMovementType("");
+          setDateFrom("");
+          setDateTo("");
+          setPage(1);
+        }}
+        className="lg:ml-auto whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+      >
+        Clear filters
+      </button>
+    )}
+  </div>
+</div>
 
         {/* =====================================================
         TABLE
@@ -164,7 +242,7 @@ export function StockMovement() {
             <h2 className="font-semibold text-slate-900">Inventory History</h2>
 
             <p className="mt-1 text-xs text-slate-500">
-              {filteredMovements.length} movements
+              {pagination.total} movements
             </p>
           </div>
 
@@ -203,7 +281,7 @@ export function StockMovement() {
               </thead>
 
               <tbody className="divide-y divide-slate-100">
-                {filteredMovements.map((movement) => {
+                {movements.map((movement) => {
                   const isIncoming = movement.quantity_change > 0;
 
                   return (
@@ -328,7 +406,7 @@ export function StockMovement() {
                 EMPTY STATE
             ====================================================== */}
 
-                {filteredMovements.length === 0 && (
+                {movements.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <FiPackage size={28} className="mx-auto text-slate-300" />
@@ -353,17 +431,24 @@ export function StockMovement() {
 
           <div className="border-t border-slate-200 px-6 py-4">
             <p className="text-xs text-slate-500">
-              Showing {filteredMovements.length} movements
+              Showing {movements.length} movements
             </p>
           </div>
         </div>
+
+<Pagination page={pagination? pagination.page : 1} total_page={pagination? pagination.pages : 1} onNext={()=>setPage((curpage)=>curpage+1)} onPrev={()=>setPage((curpage)=>curpage-1)}/>
       </div>
 
       {/* ===========================================================
       MOVEMENT MODAL
   ============================================================ */}
 
-      {showModal && <StockMovementModal onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <StockMovementModal
+          movement={selectedMovement}
+          onClose={() => setShowModal(false)}
+        />
+      )}
 
       {/* ===========================================================
       DELETE CONFIRMATION

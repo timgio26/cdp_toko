@@ -2,7 +2,8 @@ from uuid import UUID
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from sqlalchemy import select
+from sqlalchemy import select,or_
+from datetime import datetime, timedelta
 
 from cdp_toko.extension import db
 from cdp_toko.models.inventory import Product, StockMovement
@@ -27,6 +28,7 @@ def create_stock_movement():
     product_id = data.get("product_id")
     quantity_change = data.get("quantity_change")
     reason = data.get("reason")
+    created_at = data.get("created_at")
 
     # -------------------------
     # Product ID
@@ -99,6 +101,27 @@ def create_stock_movement():
         }), 400
 
     # -------------------------
+    # Movement date
+    # -------------------------
+
+    if not created_at:
+        return jsonify({
+            "error": "created_at is required."
+        }), 400
+
+    if not isinstance(created_at, str):
+        return jsonify({
+            "error": "created_at must be a valid ISO 8601 datetime."
+        }), 400
+
+    try:
+        created_at = datetime.fromisoformat(created_at)
+    except ValueError:
+        return jsonify({
+            "error": "created_at must be a valid ISO 8601 datetime."
+        }), 400
+
+    # -------------------------
     # Get current stock
     # -------------------------
 
@@ -111,6 +134,13 @@ def create_stock_movement():
         )
         .first()
     )
+
+    if latest_movement:
+        if created_at < latest_movement.created_at:
+            return jsonify({
+                "error": "Movement date cannot be earlier than the latest stock movement.",
+                "latest_movement_date": latest_movement.created_at.isoformat(),
+            }), 400
 
     quantity_before = (
         latest_movement.quantity_after
@@ -141,6 +171,7 @@ def create_stock_movement():
         quantity_change=quantity_change,
         quantity_after=quantity_after,
         reason=reason,
+        created_at=created_at,
     )
 
     db.session.add(movement)
@@ -156,19 +187,144 @@ def create_stock_movement():
 # GET ALL STOCK MOVEMENTS
 # =========================================================
 
+
 @stock_movements_bp.get("/")
 @jwt_required()
 def get_stock_movements():
-    movements = db.session.execute(
-        select(StockMovement)
-        .order_by(StockMovement.created_at.desc())
-    ).scalars().all()
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+
+    search = request.args.get("search", "").strip()
+    product_id = request.args.get("product_id")
+    movement_type = request.args.get("movement_type", "").strip().lower()
+    date_from = request.args.get("date_from", "").strip()
+    date_to = request.args.get("date_to", "").strip()
+
+    # ---------------------------------------------
+    # PAGINATION
+    # ---------------------------------------------
+
+    page = max(page, 1)
+    per_page = min(max(per_page, 1), 100)
+
+    query = (
+        db.select(StockMovement)
+        .join(StockMovement.product)
+        .order_by(
+            StockMovement.created_at.desc(),
+            StockMovement.id.desc(),
+        )
+    )
+
+    # ---------------------------------------------
+    # SEARCH
+    # ---------------------------------------------
+
+    if search:
+        pattern = f"%{search}%"
+
+        query = query.where(
+            or_(
+                Product.name.ilike(pattern),
+                Product.sku.ilike(pattern),
+                StockMovement.reason.ilike(pattern),
+            )
+        )
+
+    # ---------------------------------------------
+    # PRODUCT FILTER
+    # ---------------------------------------------
+
+    if product_id:
+        try:
+            product_uuid = UUID(product_id)
+        except (ValueError, TypeError, AttributeError):
+            return jsonify({
+                "error": "Product ID must be a valid UUID."
+            }), 400
+
+        query = query.where(
+            StockMovement.product_id == product_uuid
+        )
+
+    # ---------------------------------------------
+    # MOVEMENT TYPE
+    # ---------------------------------------------
+
+    if movement_type:
+        if movement_type == "inbound":
+            query = query.where(
+                StockMovement.quantity_change > 0
+            )
+        elif movement_type == "outbound":
+            query = query.where(
+                StockMovement.quantity_change < 0
+            )
+        else:
+            return jsonify({
+                "error": "Movement type must be inbound or outbound."
+            }), 400
+
+    # ---------------------------------------------
+    # DATE FROM
+    # ---------------------------------------------
+
+    if date_from:
+        try:
+            parsed_date_from = datetime.fromisoformat(date_from)
+        except ValueError:
+            return jsonify({
+                "error": "date_from must be a valid ISO date or datetime."
+            }), 400
+
+        query = query.where(
+            StockMovement.created_at >= parsed_date_from
+        )
+
+    # ---------------------------------------------
+    # DATE TO
+    # ---------------------------------------------
+
+    if date_to:
+        try:
+            parsed_date_to = datetime.fromisoformat(date_to)
+
+            # If only a date was supplied, include the whole day.
+            if "T" not in date_to:
+                parsed_date_to += timedelta(days=1)
+        except ValueError:
+            return jsonify({
+                "error": "date_to must be a valid ISO date or datetime."
+            }), 400
+
+        query = query.where(
+            StockMovement.created_at < parsed_date_to
+        )
+
+    # ---------------------------------------------
+    # EXECUTE PAGINATION
+    # ---------------------------------------------
+
+    pagination = db.paginate(
+        query,
+        page=page,
+        per_page=per_page,
+        error_out=False,
+    )
 
     return jsonify({
         "data": [
             movement.to_dict()
-            for movement in movements
-        ]
+            for movement in pagination.items
+        ],
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev,
+        },
     }), 200
 
 
@@ -238,81 +394,46 @@ def get_product_stock_movements(product_id):
 @stock_movements_bp.put("/<uuid:movement_id>")
 @jwt_required()
 def update_stock_movement(movement_id):
-    movement = db.session.get(
-        StockMovement,
-        movement_id,
-    )
+    movement = db.session.get(StockMovement, movement_id)
 
     if not movement:
         return jsonify({
             "error": "Stock movement not found."
         }), 404
 
+    product = db.session.get(Product, movement.product_id)
+
+    if not product:
+        return jsonify({
+            "error": "Product not found."
+        }), 404
+
     data = request.get_json() or {}
 
-    old_change = movement.change
-    old_product_id = movement.product_id
+    # QUANTITY CHANGE
+    if "quantity_change" in data:
+        quantity_change = data["quantity_change"]
 
-    # =====================================================
-    # PRODUCT
-    # =====================================================
-
-    if "product_id" in data:
-        try:
-            new_product_id = UUID(
-                str(data["product_id"])
-            )
-        except (ValueError, TypeError, AttributeError):
+        if isinstance(quantity_change, bool):
             return jsonify({
-                "error": "Product ID must be a valid UUID."
-            }), 400
-
-        new_product = db.session.get(
-            Product,
-            new_product_id,
-        )
-
-        if not new_product:
-            return jsonify({
-                "error": "Product not found."
-            }), 404
-    else:
-        new_product_id = old_product_id
-        new_product = db.session.get(
-            Product,
-            old_product_id,
-        )
-
-    # =====================================================
-    # CHANGE
-    # =====================================================
-
-    if "change" in data:
-        new_change = data["change"]
-
-        if isinstance(new_change, bool):
-            return jsonify({
-                "error": "Change must be a valid integer."
+                "error": "Quantity change must be a valid integer."
             }), 400
 
         try:
-            new_change = int(new_change)
+            quantity_change = int(quantity_change)
         except (TypeError, ValueError):
             return jsonify({
-                "error": "Change must be a valid integer."
+                "error": "Quantity change must be a valid integer."
             }), 400
 
-        if new_change == 0:
+        if quantity_change == 0:
             return jsonify({
-                "error": "Change cannot be zero."
+                "error": "Quantity change cannot be zero."
             }), 400
     else:
-        new_change = old_change
+        quantity_change = movement.change
 
-    # =====================================================
     # REASON
-    # =====================================================
-
     if "reason" in data:
         reason = data["reason"]
 
@@ -328,75 +449,27 @@ def update_stock_movement(movement_id):
                 "error": "Reason cannot be empty."
             }), 400
 
-        if len(reason) > 120:
+        if len(reason) > 255:
             return jsonify({
-                "error": "Reason cannot exceed 120 characters."
+                "error": "Reason cannot exceed 255 characters."
             }), 400
     else:
         reason = movement.reason
 
-    # =====================================================
-    # UPDATE QUANTITIES
-    # =====================================================
+    # Reverse the old movement and apply the new movement.
+    new_quantity = movement.quantity_before + quantity_change
 
-    if new_product_id == old_product_id:
-        # Same product:
-        #
-        # Remove the old movement effect
-        # and apply the new movement effect.
+    if new_quantity < 0:
+        return jsonify({
+            "error": "Stock quantity cannot become negative.",
+            "current_quantity": product.quantity,
+            "old_change": movement.change,
+            "new_change": quantity_change,
+        }), 400
 
-        quantity_after_update = (
-            new_product.quantity
-            - old_change
-            + new_change
-        )
-
-        if quantity_after_update < 0:
-            return jsonify({
-                "error": "Stock quantity cannot become negative.",
-                "current_quantity": new_product.quantity,
-                "old_change": old_change,
-                "new_change": new_change,
-            }), 400
-
-        new_product.quantity = quantity_after_update
-
-    else:
-        # Movement is being moved to another product.
-        #
-        # First undo the movement on the old product.
-        # Then apply it to the new product.
-
-        old_product = db.session.get(
-            Product,
-            old_product_id,
-        )
-
-        old_product_quantity = (
-            old_product.quantity - old_change
-        )
-
-        if old_product_quantity < 0:
-            return jsonify({
-                "error": "The old product quantity would become negative."
-            }), 400
-
-        if new_product.quantity + new_change < 0:
-            return jsonify({
-                "error": "The new product quantity cannot become negative.",
-                "current_quantity": new_product.quantity,
-                "requested_change": new_change,
-            }), 400
-
-        old_product.quantity = old_product_quantity
-        new_product.quantity += new_change
-
-    # =====================================================
-    # UPDATE MOVEMENT
-    # =====================================================
-
-    movement.product_id = new_product_id
-    movement.change = new_change
+    # product.quantity = new_quantity
+    movement.quantity_change = quantity_change
+    movement.quantity_after = new_quantity
     movement.reason = reason
 
     db.session.commit()
@@ -404,9 +477,8 @@ def update_stock_movement(movement_id):
     return jsonify({
         "message": "Stock movement updated.",
         "data": movement.to_dict(),
-        "product_quantity": new_product.quantity,
+        # "product_quantity": product.quantity,
     }), 200
-
 
 # =========================================================
 # DELETE STOCK MOVEMENT
