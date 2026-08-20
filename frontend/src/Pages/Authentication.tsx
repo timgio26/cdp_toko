@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+import {
+  FiArrowRight,
+  FiEye,
+  FiEyeOff,
+  FiLock,
+  FiUser,
+} from "react-icons/fi";
 import { useSignIn, useSignUp } from "../utils/customerQuery";
 
 type AuthMode = "login" | "signup";
@@ -14,144 +21,364 @@ interface SignupFormState extends LoginFormState {
 
 export function Authentication() {
   const [mode, setMode] = useState<AuthMode>("login");
+
   const [loginForm, setLoginForm] = useState<LoginFormState>({
     username: "",
     password: "",
   });
+
   const [signupForm, setSignupForm] = useState<SignupFormState>({
     name: "",
     username: "",
     password: "",
   });
+
+  const [showPwd, setShowPwd] = useState(false);
+
   const { mutate: signUp, isPending: loadingSignUp } = useSignUp();
   const { mutate: signIn, isPending: loadingSignIn } = useSignIn();
-  const [showPwd, setShowPdw] = useState<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const loading = loadingSignUp || loadingSignIn;
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
+
     if (mode === "login") {
-      setLoginForm({ ...loginForm, [name]: value });
+      setLoginForm((current) => ({
+        ...current,
+        [name]: value,
+      }));
     } else {
-      setSignupForm({ ...signupForm, [name]: value });
+      setSignupForm((current) => ({
+        ...current,
+        [name]: value,
+      }));
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (mode === "login") {
-      // console.log('Logging in with', loginForm);
       signIn(loginForm);
     } else {
-      // console.log('Signing up with', signupForm);
       signUp(signupForm, {
         onSuccess: () => {
           setMode("login");
+          setShowPwd(false);
         },
       });
     }
   };
 
+  const switchMode = (nextMode: AuthMode) => {
+    if (loading) return;
+
+    setMode(nextMode);
+    setShowPwd(false);
+  };
+
   return (
-    <div className="flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-          {mode === "login" ? "Welcome Back 👋" : "Create an Account 🚀"}
-        </h2>
+    <div className="flex justify-center px-4 py-8 sm:px-6 sm:py-10">
+      <div className="w-full max-w-md">
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {mode === "signup" && (
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                value={signupForm.name}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500"
-              />
-            </div>
-          )}
+        {/* Heading */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {mode === "login"
+              ? "Welcome back"
+              : "Create your account"}
+          </h1>
 
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              name="username"
-              id="username"
-              value={
-                mode === "login" ? loginForm.username : signupForm.username
-              }
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
+          <p className="mt-1.5 text-sm leading-5 text-slate-500">
+            {mode === "login"
+              ? "Sign in to continue to your workspace."
+              : "Create an account to start managing your business."}
+          </p>
+        </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPwd ? "text" : "password"}
-                name="password"
-                id="password"
-                value={
-                  mode === "login" ? loginForm.password : signupForm.password
-                }
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              />
+        {/* Form container */}
+        <div className="rounded-2xl border border-slate-200 bg-white">
+
+          {/* Mode switch */}
+          <div className="border-b border-slate-200 p-2">
+            <div className="grid grid-cols-2 rounded-lg bg-slate-100 p-1">
+
               <button
                 type="button"
-                onClick={() => setShowPdw((curstate) => !curstate)}
-                className="absolute inset-y-0 right-0 px-3 flex items-center text-sm text-gray-600 hover:text-indigo-600 focus:outline-none"
+                onClick={() => switchMode("login")}
+                className={`rounded-md py-2 text-sm font-semibold transition ${
+                  mode === "login"
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
-                {showPwd ? "Hide" : "Show"}
+                Login
               </button>
+
+              <button
+                type="button"
+                onClick={() => switchMode("signup")}
+                className={`rounded-md py-2 text-sm font-semibold transition ${
+                  mode === "signup"
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Sign Up
+              </button>
+
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5 p-5 sm:p-6"
           >
-            {loadingSignUp || loadingSignIn
-              ? "Loading..."
-              : mode === "login"
-              ? "Login"
-              : "Sign Up"}
-          </button>
-        </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          {mode === "login"
-            ? "Don't have an account?"
-            : "Already have an account?"}{" "}
-          <button
-            type="button"
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="text-indigo-600 hover:underline font-medium"
-          >
-            {mode === "login" ? "Sign up" : "Login"}
-          </button>
-        </p>
+            {mode === "signup" && (
+              <InputField
+                label="Name"
+                name="name"
+                value={signupForm.name}
+                onChange={handleChange}
+                placeholder="Your name"
+                icon={<FiUser size={17} />}
+                autoComplete="name"
+              />
+            )}
+
+            <InputField
+              label="Username"
+              name="username"
+              value={
+                mode === "login"
+                  ? loginForm.username
+                  : signupForm.username
+              }
+              onChange={handleChange}
+              placeholder="Enter your username"
+              icon={<FiUser size={17} />}
+              autoComplete="username"
+            />
+
+            {/* Password */}
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Password
+              </label>
+
+              <div className="relative">
+
+                <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                  <FiLock size={17} />
+                </div>
+
+                <input
+                  type={showPwd ? "text" : "password"}
+                  name="password"
+                  id="password"
+                  value={
+                    mode === "login"
+                      ? loginForm.password
+                      : signupForm.password
+                  }
+                  onChange={handleChange}
+                  required
+                  autoComplete={
+                    mode === "login"
+                      ? "current-password"
+                      : "new-password"
+                  }
+                  placeholder="Enter your password"
+                  className="
+                    h-10.5 w-full rounded-lg
+                    border border-slate-200
+                    bg-white
+                    pl-10 pr-11
+                    text-sm text-slate-800
+                    outline-none
+                    placeholder:text-slate-400
+                    transition
+                    hover:border-slate-300
+                    focus:border-blue-500
+                    focus:ring-4
+                    focus:ring-blue-50
+                  "
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPwd((current) => !current)}
+                  className="
+                    absolute right-0 top-0
+                    flex h-10.5 w-10
+                    items-center justify-center
+                    text-slate-400
+                    transition
+                    hover:text-blue-600
+                  "
+                  aria-label={
+                    showPwd
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showPwd ? (
+                    <FiEyeOff size={17} />
+                  ) : (
+                    <FiEye size={17} />
+                  )}
+                </button>
+
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="
+                group
+                flex h-10.5 w-full
+                items-center justify-center gap-2
+                rounded-lg
+                bg-blue-600
+                text-sm font-semibold text-white
+                transition
+                hover:bg-blue-700
+                focus:outline-none
+                focus:ring-4
+                focus:ring-blue-100
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+              "
+            >
+              {loading
+                ? "Please wait..."
+                : mode === "login"
+                ? "Sign In"
+                : "Create Account"}
+
+              {!loading && (
+                <FiArrowRight
+                  size={17}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              )}
+            </button>
+
+          </form>
+
+          {/* Bottom switch */}
+          <div className="border-t border-slate-100 px-5 py-4 text-center sm:px-6">
+            <p className="text-sm text-slate-500">
+
+              {mode === "login"
+                ? "Don't have an account?"
+                : "Already have an account?"}
+
+              {" "}
+
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  switchMode(
+                    mode === "login"
+                      ? "signup"
+                      : "login"
+                  )
+                }
+                className="
+                  font-semibold
+                  text-blue-600
+                  transition
+                  hover:text-blue-700
+                  disabled:opacity-50
+                "
+              >
+                {mode === "login"
+                  ? "Create one"
+                  : "Sign in"}
+              </button>
+
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =============================================================
+   INPUT
+============================================================= */
+
+function InputField({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  icon,
+  autoComplete,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  icon: React.ReactNode;
+  autoComplete?: string;
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={name}
+        className="mb-1.5 block text-sm font-medium text-slate-700"
+      >
+        {label}
+      </label>
+
+      <div className="relative">
+
+        <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+          {icon}
+        </div>
+
+        <input
+          type="text"
+          name={name}
+          id={name}
+          value={value}
+          onChange={onChange}
+          required
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          className="
+            h-10.5 w-full rounded-lg
+            border border-slate-200
+            bg-white
+            pl-10 pr-4
+            text-sm text-slate-800
+            outline-none
+            placeholder:text-slate-400
+            transition
+            hover:border-slate-300
+            focus:border-blue-500
+            focus:ring-4
+            focus:ring-blue-50
+          "
+        />
+
       </div>
     </div>
   );

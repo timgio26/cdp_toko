@@ -20,7 +20,7 @@ import { DeleteConfirmModal } from "../../Components/DeleteConfirmModal";
 import { Pagination } from "../../Components/Pagination";
 import { useDebounce } from "../../utils/utilsHook";
 
-export function StockMovement() {
+export default function StockMovement() {
   // const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedMovement, setSelectedMovement] =

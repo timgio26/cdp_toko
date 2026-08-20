@@ -19,20 +19,24 @@ import { ProductModal } from "./ProductModal";
 import { DeleteConfirmModal } from "../../Components/DeleteConfirmModal";
 import { Pagination } from "../../Components/Pagination";
 import { useDebounce } from "../../utils/utilsHook";
+import { formatRupiah } from "../../utils/myfunction";
 
-export function Product() {
+export default function Product() {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
-  const [productToDelete, setProductToDelete] = useState<ProductData | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(
+    null,
+  );
+  const [productToDelete, setProductToDelete] = useState<ProductData | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
   const { products, pagination } = useProducts(page, 10, debouncedSearch);
   const { deleteProduct, isPending: isDeleting } = useDeleteProduct();
-  
-  const totalPages = pagination?.pages ?? 0;
 
+  const totalPages = pagination?.pages ?? 0;
 
   // =========================================================
   // CREATE
@@ -114,7 +118,10 @@ export function Product() {
             <input
               type="text"
               value={search}
-              onChange={(e) => {setSearch(e.target.value);setPage(1);}}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="Search products..."
               className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
@@ -125,10 +132,14 @@ export function Product() {
             PRODUCT TABLE
         ====================================================== */}
 
+        {/* =========================================================
+    PRODUCTS CONTAINER
+========================================================= */}
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          {/* Table Header */}
-
-          <div className="border-b border-slate-200 px-6 py-4">
+          {/* =========================================================
+      HEADER
+  ========================================================== */}
+          <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
             <h2 className="font-semibold text-slate-900">All Products</h2>
 
             <p className="mt-1 text-xs text-slate-500">
@@ -136,48 +147,42 @@ export function Product() {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* =========================================================
+      DESKTOP TABLE
+  ========================================================== */}
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/70">
                   {/* Product */}
-
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Product
                   </th>
 
-                  {/* SKU */}
-
-                  {/* <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    SKU
-                  </th> */}
-
                   {/* Category */}
-
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Category
                   </th>
 
                   {/* Quantity */}
-
                   <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Quantity
                   </th>
 
                   {/* Price */}
-
                   <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Price / Unit
                   </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Selling Price / Unit
+                  </th>
 
                   {/* Suppliers */}
-
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Suppliers
                   </th>
 
                   {/* Actions */}
-
                   <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Actions
                   </th>
@@ -188,16 +193,15 @@ export function Product() {
                 {products.map((product) => (
                   <tr key={product.id} className="transition hover:bg-slate-50">
                     {/* =================================================
-                        PRODUCT
-                    ================================================== */}
-
+                PRODUCT
+            ================================================== */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
                           <FiPackage size={17} className="text-slate-600" />
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-900">
                             {product.name}
                           </p>
@@ -210,19 +214,8 @@ export function Product() {
                     </td>
 
                     {/* =================================================
-                        SKU
-                    ================================================== */}
-
-                    {/* <td className="px-6 py-4">
-                      <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-600">
-                        {product.sku}
-                      </span>
-                    </td> */}
-
-                    {/* =================================================
-                        CATEGORY
-                    ================================================== */}
-
+                CATEGORY
+            ================================================== */}
                     <td className="px-6 py-4">
                       {product.category_name ? (
                         <div className="flex items-center gap-2">
@@ -240,9 +233,8 @@ export function Product() {
                     </td>
 
                     {/* =================================================
-                        QUANTITY
-                    ================================================== */}
-
+                QUANTITY
+            ================================================== */}
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
                         {product.quantity} {product.unit}
@@ -250,12 +242,22 @@ export function Product() {
                     </td>
 
                     {/* =================================================
-                        PRICE
-                    ================================================== */}
-
+                PRICE
+            ================================================== */}
                     <td className="px-6 py-4 text-right">
                       <span className="text-sm font-medium text-slate-900">
-                        {Number(product.price_per_unit).toFixed(2)}
+                        {formatRupiah(Number(product.price_per_unit))}
+                      </span>
+
+                      <span className="ml-1 text-xs text-slate-400">
+                        / {product.unit}
+                      </span>
+                    </td>
+
+                                        <td className="px-6 py-4 text-right">
+                      <span className="text-sm font-medium text-slate-900">
+                        {/* {Number(product.selling_price_per_unit).toFixed(2)} */}
+                        {formatRupiah(Number(product.selling_price_per_unit))}
                       </span>
 
                       <span className="ml-1 text-xs text-slate-400">
@@ -264,9 +266,8 @@ export function Product() {
                     </td>
 
                     {/* =================================================
-                        SUPPLIERS
-                    ================================================== */}
-
+                SUPPLIERS
+            ================================================== */}
                     <td className="px-6 py-4">
                       {product.suppliers.length > 0 ? (
                         <div className="flex items-center gap-2">
@@ -300,26 +301,43 @@ export function Product() {
                     </td>
 
                     {/* =================================================
-                        ACTIONS
-                    ================================================== */}
-
+                ACTIONS
+            ================================================== */}
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-1">
+                        {/* Edit */}
                         <button
                           type="button"
                           onClick={() => openEdit(product)}
                           title="Edit product"
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          className="
+                    rounded-lg
+                    p-2
+                    text-slate-400
+                    transition
+                    hover:bg-slate-100
+                    hover:text-slate-700
+                  "
                         >
                           <FiEdit2 size={16} />
                         </button>
 
+                        {/* Delete */}
                         <button
                           type="button"
                           title="Delete product"
                           onClick={() => setProductToDelete(product)}
                           disabled={isDeleting}
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="
+                    rounded-lg
+                    p-2
+                    text-slate-400
+                    transition
+                    hover:bg-red-50
+                    hover:text-red-600
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                  "
                         >
                           <FiTrash2 size={16} />
                         </button>
@@ -328,13 +346,10 @@ export function Product() {
                   </tr>
                 ))}
 
-                {/* =====================================================
-                    EMPTY STATE
-                ====================================================== */}
-
+                {/* Desktop Empty State */}
                 {products.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={6} className="px-6 py-12 text-center">
                       <FiPackage size={28} className="mx-auto text-slate-300" />
 
                       <p className="mt-3 text-sm font-medium text-slate-600">
@@ -352,10 +367,183 @@ export function Product() {
           </div>
 
           {/* =========================================================
-              FOOTER
-          ========================================================== */}
+      MOBILE PRODUCT LIST
+  ========================================================== */}
+          <div className="divide-y divide-slate-100 md:hidden">
+            {products.length > 0 && (
+              <div className="divide-y divide-slate-100 md:hidden">
+                {products.map((product) => (
+                  <div key={product.id} className="p-4">
+                    {/* Top row */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        {/* Product icon */}
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                          <FiPackage size={16} className="text-slate-500" />
+                        </div>
 
-          <div className="border-t border-slate-200 px-6 py-4">
+                        {/* Product name */}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {product.name}
+                          </p>
+
+                          <p className="mt-0.5 truncate text-xs text-slate-400">
+                            SKU: {product.sku}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Quantity */}
+                      <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                        {product.quantity} {product.unit}
+                      </span>
+                    </div>
+
+                    {/* Details */}
+                    <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                      {/* Category */}
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                          Category
+                        </p>
+
+                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                          {product.category_name && (
+                            <FiTag
+                              size={12}
+                              className="shrink-0 text-slate-400"
+                            />
+                          )}
+
+                          <p className="truncate text-xs text-slate-600">
+                            {product.category_name || "No category"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Price */}
+                      <div className="text-right">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                          Price / Unit
+                        </p>
+
+                        <p className="mt-0.5 text-sm font-bold text-slate-900">
+                          {Number(product.price_per_unit).toFixed(2)}
+                        </p>
+                      </div>
+
+                      {/* Quantity */}
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                          Stock
+                        </p>
+
+                        <p className="mt-0.5 text-xs text-slate-600">
+                          {product.quantity} {product.unit}
+                        </p>
+                      </div>
+
+                      {/* Suppliers hidden */}
+                      <div className="text-right">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                          Product
+                        </p>
+
+                        <p className="mt-0.5 text-xs text-slate-600">
+                          {product.unit}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-4 flex gap-2 border-t border-slate-100 pt-3">
+                      {/* Edit */}
+                      <button
+                        type="button"
+                        onClick={() => openEdit(product)}
+                        className="
+              inline-flex
+              h-9
+              flex-1
+              items-center
+              justify-center
+              gap-2
+              rounded-lg
+              border
+              border-slate-200
+              bg-white
+              px-3
+              text-xs
+              font-medium
+              text-slate-600
+              transition
+              hover:border-blue-200
+              hover:bg-blue-50
+              hover:text-blue-600
+            "
+                      >
+                        <FiEdit2 size={14} />
+                        Edit Product
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => setProductToDelete(product)}
+                        disabled={isDeleting}
+                        className="
+              inline-flex
+              h-9
+              flex-1
+              items-center
+              justify-center
+              gap-2
+              rounded-lg
+              border
+              border-slate-200
+              bg-white
+              px-3
+              text-xs
+              font-medium
+              text-slate-600
+              transition
+              hover:border-red-200
+              hover:bg-red-50
+              hover:text-red-600
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
+                      >
+                        <FiTrash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Mobile Empty State */}
+            {products.length === 0 && (
+              <div className="px-4 py-12 text-center">
+                <FiPackage size={28} className="mx-auto text-slate-300" />
+
+                <p className="mt-3 text-sm font-medium text-slate-600">
+                  No products found
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Try a different search term.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* =========================================================
+      FOOTER
+  ========================================================== */}
+          <div className="border-t border-slate-200 px-4 py-4 sm:px-6">
             <p className="text-xs text-slate-500">
               Showing {products.length} products
             </p>

@@ -11,26 +11,21 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import { useDashboard } from "../../utils/inventoryQuery";
+import { formatDate, formatRupiah } from "../../utils/myfunction";
+import { SummaryCard } from "../../Components/SummaryCard";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+// function formatCurrency(value: number) {
+//   return new Intl.NumberFormat("id-ID", {
+//     style: "currency",
+//     currency: "IDR",
+//     maximumFractionDigits: 0,
+//   }).format(value);
+// }
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 function formatRelativeTime(value: string) {
   const date = new Date(value);
@@ -48,45 +43,9 @@ function formatRelativeTime(value: string) {
   return formatDate(value);
 }
 
-function SummaryCard({
-  icon,
-  label,
-  value,
-  description,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  description?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">
-            {label}
-          </p>
 
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-            {value}
-          </p>
 
-          {description && (
-            <p className="mt-1 text-xs text-slate-400">
-              {description}
-            </p>
-          )}
-        </div>
-
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function InventoryDashboard() {
+export default function InventoryDashboard() {
   const {
     dashboard,
     isPending,
@@ -216,7 +175,7 @@ export function InventoryDashboard() {
         <SummaryCard
           icon={<FiDollarSign size={19} />}
           label="Inventory Value"
-          value={formatCurrency(summary.inventory_value)}
+          value={formatRupiah(summary.inventory_value)}
           description="Current stock × unit price"
         />
 
@@ -479,7 +438,7 @@ export function InventoryDashboard() {
                       </div>
 
                       <p className="shrink-0 text-sm font-semibold text-slate-900">
-                        {formatCurrency(
+                        {formatRupiah(
                           item.inventory_value,
                         )}
                       </p>
@@ -644,7 +603,7 @@ export function InventoryDashboard() {
                 </div>
 
                 <p className="shrink-0 text-sm font-semibold text-slate-900">
-                  {formatCurrency(
+                  {formatRupiah(
                     product.inventory_value,
                   )}
                 </p>

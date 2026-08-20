@@ -1,11 +1,11 @@
 import { CiCircleChevLeft, CiWarning } from "react-icons/ci";
 import { useLocation, useNavigate } from "react-router";
-import { MergeCustomerSchema, useMergeAddress } from "../utils/customerQuery";
-import { ErrorBackToHome } from "../Components/ErrorBackToHome";
+import { MergeCustomerSchema, useMergeAddress } from "../../utils/customerQuery";
+import { ErrorBackToHome } from "../../Components/ErrorBackToHome";
 import { useState } from "react";
-import { PopupModal } from "../Components/PopupModal";
+import { PopupModal } from "../../Components/PopupModal";
 
-export function MergeCustomer() {
+export default function MergeCustomer() {
   const navigate = useNavigate();
   const { mutate: mergeAddress, isPending } = useMergeAddress();
   const [selectedCustomer, setSelectedCustomer] = useState<string>();

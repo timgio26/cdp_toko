@@ -20,110 +20,74 @@ stock_movements_bp = Blueprint(
 # CREATE STOCK MOVEMENT
 # =========================================================
 
-@stock_movements_bp.post("/")
-@jwt_required()
-def create_stock_movement():
-    data = request.get_json() or {}
-
-    product_id = data.get("product_id")
-    quantity_change = data.get("quantity_change")
-    reason = data.get("reason")
-    created_at = data.get("created_at")
-
-    # -------------------------
-    # Product ID
-    # -------------------------
-
+def create_stock_movement_record(
+    product_id,
+    quantity_change,
+    reason,
+    created_at,
+    from_sales=False,
+):
     if not product_id:
-        return jsonify({
-            "error": "product_id is required."
-        }), 400
+        raise ValueError("product_id is required.")
 
     try:
         product_uuid = UUID(str(product_id))
     except (ValueError, TypeError, AttributeError):
-        return jsonify({
-            "error": "Product ID must be a valid UUID."
-        }), 400
+        raise ValueError("Product ID must be a valid UUID.")
 
     product = db.session.get(Product, product_uuid)
 
     if not product:
-        return jsonify({
-            "error": "Product not found."
-        }), 404
-
-    # -------------------------
-    # Quantity change
-    # -------------------------
+        raise ValueError("Product not found.")
 
     if quantity_change is None:
-        return jsonify({
-            "error": "quantity_change is required."
-        }), 400
+        raise ValueError("quantity_change is required.")
 
     if isinstance(quantity_change, bool):
-        return jsonify({
-            "error": "quantity_change must be a valid integer."
-        }), 400
+        raise ValueError(
+            "quantity_change must be a valid integer."
+        )
 
     try:
         quantity_change = int(quantity_change)
     except (TypeError, ValueError):
-        return jsonify({
-            "error": "quantity_change must be a valid integer."
-        }), 400
+        raise ValueError(
+            "quantity_change must be a valid integer."
+        )
 
     if quantity_change == 0:
-        return jsonify({
-            "error": "quantity_change cannot be zero."
-        }), 400
-
-    # -------------------------
-    # Reason
-    # -------------------------
+        raise ValueError(
+            "quantity_change cannot be zero."
+        )
 
     if not isinstance(reason, str):
-        return jsonify({
-            "error": "Reason must be a string."
-        }), 400
+        raise ValueError("Reason must be a string.")
 
     reason = reason.strip()
 
     if not reason:
-        return jsonify({
-            "error": "Reason cannot be empty."
-        }), 400
+        raise ValueError("Reason cannot be empty.")
 
     if len(reason) > 120:
-        return jsonify({
-            "error": "Reason cannot exceed 120 characters."
-        }), 400
-
-    # -------------------------
-    # Movement date
-    # -------------------------
+        raise ValueError(
+            "Reason cannot exceed 120 characters."
+        )
 
     if not created_at:
-        return jsonify({
-            "error": "created_at is required."
-        }), 400
+        raise ValueError("created_at is required.")
 
-    if not isinstance(created_at, str):
-        return jsonify({
-            "error": "created_at must be a valid ISO 8601 datetime."
-        }), 400
+    if isinstance(created_at, str):
+        try:
+            created_at = datetime.fromisoformat(created_at)
+        except ValueError:
+            raise ValueError(
+                "created_at must be a valid ISO 8601 datetime."
+            )
 
-    try:
-        created_at = datetime.fromisoformat(created_at)
-    except ValueError:
-        return jsonify({
-            "error": "created_at must be a valid ISO 8601 datetime."
-        }), 400
-
-    # -------------------------
-    # Get current stock
-    # -------------------------
+    if not isinstance(from_sales, bool):
+        raise ValueError(
+            "from_sales must be a boolean."
+        )
 
     latest_movement = (
         StockMovement.query
@@ -137,10 +101,10 @@ def create_stock_movement():
 
     if latest_movement:
         if created_at < latest_movement.created_at:
-            return jsonify({
-                "error": "Movement date cannot be earlier than the latest stock movement.",
-                "latest_movement_date": latest_movement.created_at.isoformat(),
-            }), 400
+            raise ValueError(
+                "Movement date cannot be earlier than "
+                "the latest stock movement."
+            )
 
     quantity_before = (
         latest_movement.quantity_after
@@ -148,22 +112,12 @@ def create_stock_movement():
         else 0
     )
 
-    # -------------------------
-    # Calculate new quantity
-    # -------------------------
-
     quantity_after = quantity_before + quantity_change
 
     if quantity_after < 0:
-        return jsonify({
-            "error": "Stock quantity cannot become negative.",
-            "current_quantity": quantity_before,
-            "quantity_change": quantity_change,
-        }), 400
-
-    # -------------------------
-    # Create movement
-    # -------------------------
+        raise ValueError(
+            "Stock quantity cannot become negative."
+        )
 
     movement = StockMovement(
         product_id=product.id,
@@ -171,17 +125,49 @@ def create_stock_movement():
         quantity_change=quantity_change,
         quantity_after=quantity_after,
         reason=reason,
+        from_sales=from_sales,
         created_at=created_at,
     )
 
     db.session.add(movement)
-    db.session.commit()
 
-    return jsonify({
-        "message": "Stock movement created.",
-        "data": movement.to_dict(),
-        "product_quantity": quantity_after,
-    }), 201
+    return movement
+
+@stock_movements_bp.post("/")
+@jwt_required()
+def create_stock_movement():
+    data = request.get_json() or {}
+
+    product_id = data.get("product_id")
+    quantity_change = data.get("quantity_change")
+    reason = data.get("reason")
+    created_at = data.get("created_at")
+    try:
+        movement = create_stock_movement_record(
+            product_id=product_id,
+            quantity_change=quantity_change,
+            reason=reason,
+            created_at=created_at
+        )
+
+        db.session.commit()
+
+        return jsonify({
+            "message": "Stock movement created.",
+            "data": movement.to_dict(),
+            "product_quantity": movement.quantity_after,
+        }), 201
+
+    except ValueError as e:
+        db.session.rollback()
+
+        return jsonify({
+            "error": str(e)
+        }), 400
+
+    except Exception:
+        db.session.rollback()
+        raise
 
 # =========================================================
 # GET ALL STOCK MOVEMENTS

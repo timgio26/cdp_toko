@@ -1,7 +1,8 @@
-import { useGetDashboard } from "../utils/customerQuery";
+import { useGetDashboard } from "../../utils/customerQuery";
 
-export function Dashboard() {
+export default function Dashboard() {
   const { data, isLoading, isError } = useGetDashboard();
+  // console.log(data)
 
   if (isLoading) {
     return (

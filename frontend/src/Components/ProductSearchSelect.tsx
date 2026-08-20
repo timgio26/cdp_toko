@@ -1,19 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
-import { useProducts } from "../utils/inventoryQuery";
+import { useProducts, type ProductData } from "../utils/inventoryQuery";
 import { useDebounce } from "../utils/utilsHook";
 
-type Product = {
-  id: string;
-  name: string;
-  sku: string;
-  quantity: number;
-  unit: string;
-};
+
 
 type ProductSearchSelectProps = {
   value: string;
-  onChange: (productId: string) => void;
+  onChange: (product:ProductData) => void;
   disabled?: boolean;
 };
 
@@ -58,14 +52,14 @@ export function ProductSearchSelect({
     };
   }, []);
 
-  const handleSelect = (product: Product) => {
-    onChange(product.id);
+  const handleSelect = (product: ProductData) => {
+    onChange(product);
     setSearch("");
     setOpen(false);
   };
 
   const handleClear = () => {
-    onChange("");
+    // onChange();
     setSearch("");
   };
 

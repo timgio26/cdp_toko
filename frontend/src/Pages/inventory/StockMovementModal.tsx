@@ -140,8 +140,8 @@ export function StockMovementModal({movement,onClose,}: StockMovementModalProps)
             <div>
               <ProductSearchSelect
                 value={productId}
-                onChange={(id) => {
-                  setProductId(id);
+                onChange={(product) => {
+                  setProductId(product.id);
                   setError("");
                 }}
                 disabled={isPending || isEditing}

@@ -47,6 +47,12 @@ class Product(db.Model):
         default=0,
     )
 
+    selling_price_per_unit: Mapped[float] = mapped_column(
+        db.Numeric(12, 2),
+        nullable=False,
+        default=0,
+    )
+
     category_id: Mapped[UUID] = mapped_column(
         db.ForeignKey("category.id"),
         nullable=False,
@@ -83,6 +89,7 @@ class Product(db.Model):
             "quantity": self.quantity,
             "unit": self.unit,
             "price_per_unit": float(self.price_per_unit),
+            "selling_price_per_unit": float(self.selling_price_per_unit),
             "category_id": str(self.category_id),
             "category_name": (
                 self.category.name
@@ -166,6 +173,8 @@ class Supplier(db.Model):
         }
 
 
+from sqlalchemy import Boolean,false
+
 class StockMovement(db.Model):
     id: Mapped[UUID] = mapped_column(
         default=uuid4,
@@ -195,8 +204,14 @@ class StockMovement(db.Model):
         nullable=False,
     )
 
+    from_sales: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=false(),
+    )
+
     created_at: Mapped[datetime] = mapped_column(
-        # default=datetime.utcnow,
         nullable=False,
         index=True,
     )
@@ -221,6 +236,8 @@ class StockMovement(db.Model):
             and self.id == latest_movement.id
         )
 
+        can_modify = is_latest and not self.from_sales
+
         return {
             "id": str(self.id),
             "product_id": str(self.product_id),
@@ -230,7 +247,8 @@ class StockMovement(db.Model):
             "quantity_change": self.quantity_change,
             "quantity_after": self.quantity_after,
             "reason": self.reason,
+            "from_sales": self.from_sales,
             "created_at": self.created_at.isoformat(),
-            "can_edit": is_latest,
-            "can_delete": is_latest,
+            "can_edit": can_modify,
+            "can_delete": can_modify,
         }

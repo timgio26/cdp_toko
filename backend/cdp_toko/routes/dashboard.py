@@ -3,11 +3,12 @@ from datetime import datetime, timedelta
 
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
-from sqlalchemy import func, select
+from sqlalchemy import func, select,desc
 from sqlalchemy.orm import joinedload, selectinload
 from cdp_toko.models.inventory import Product, StockMovement
+from cdp_toko.models.sales import Sale,SaleItem
 from cdp_toko.extension import db
-
+from decimal import Decimal
 dashboard_bp = Blueprint(
     "dashboard",
     __name__,
@@ -16,7 +17,7 @@ dashboard_bp = Blueprint(
 
 @dashboard_bp.get("/inventory")
 @jwt_required()
-def get_dashboard():
+def get_dashboard_inventory():
     now = datetime.utcnow()
     period_start = now - timedelta(days=30)
 
@@ -313,3 +314,223 @@ def get_dashboard():
             ],
         }
     }), 200
+
+
+
+@dashboard_bp.get("/sales")
+@jwt_required()
+def get_dashboard_sales():
+    now = datetime.utcnow()
+    today = now.date()
+    month_start = today.replace(day=1)
+
+    # -------------------------
+    # Today's sales
+    # -------------------------
+
+    today_start = datetime.combine(today, datetime.min.time())
+    tomorrow_start = today_start + timedelta(days=1)
+
+    today_sales = (
+        db.session.query(
+            func.count(Sale.id),
+            func.coalesce(func.sum(Sale.total), 0),
+        )
+        .filter(
+            Sale.created_at >= today_start,
+            Sale.created_at < tomorrow_start,
+            Sale.status == "completed",
+        )
+        .one()
+    )
+
+    today_orders = today_sales[0]
+    today_revenue = Decimal(str(today_sales[1] or 0))
+
+    # -------------------------
+    # This month's sales
+    # -------------------------
+
+    month_start_dt = datetime.combine(
+        month_start,
+        datetime.min.time(),
+    )
+
+    month_sales = (
+        db.session.query(
+            func.count(Sale.id),
+            func.coalesce(func.sum(Sale.total), 0),
+        )
+        .filter(
+            Sale.created_at >= month_start_dt,
+            Sale.status == "completed",
+        )
+        .one()
+    )
+
+    month_orders = month_sales[0]
+    month_revenue = Decimal(str(month_sales[1] or 0))
+
+    # -------------------------
+    # Average order value
+    # -------------------------
+
+    average_order_value = (
+        month_revenue / month_orders
+        if month_orders
+        else Decimal("0")
+    )
+
+    # -------------------------
+    # Payment methods
+    # -------------------------
+
+    payment_rows = (
+        db.session.query(
+            Sale.payment_method,
+            func.count(Sale.id).label("orders"),
+            func.coalesce(func.sum(Sale.total), 0).label("revenue"),
+        )
+        .filter(
+            Sale.created_at >= month_start_dt,
+            Sale.status == "completed",
+        )
+        .group_by(Sale.payment_method)
+        .order_by(desc("revenue"))
+        .all()
+    )
+
+    payment_methods = [
+        {
+            "method": row.payment_method,
+            "orders": row.orders,
+            "revenue": str(row.revenue),
+        }
+        for row in payment_rows
+    ]
+
+    # -------------------------
+    # Top selling products
+    # -------------------------
+
+    top_product_rows = (
+        db.session.query(
+            SaleItem.product_id,
+            SaleItem.product_name,
+            SaleItem.product_sku,
+            func.sum(SaleItem.quantity).label("quantity"),
+            func.coalesce(
+                func.sum(
+                    SaleItem.unit_price * SaleItem.quantity
+                    - SaleItem.discount_amount
+                ),
+                0,
+            ).label("revenue"),
+        )
+        .join(Sale, Sale.id == SaleItem.sale_id)
+        .filter(
+            Sale.created_at >= month_start_dt,
+            Sale.status == "completed",
+        )
+        .group_by(
+            SaleItem.product_id,
+            SaleItem.product_name,
+            SaleItem.product_sku,
+        )
+        .order_by(desc("quantity"))
+        .limit(10)
+        .all()
+    )
+
+    top_products = [
+        {
+            "product_id": (
+                str(row.product_id)
+                if row.product_id
+                else None
+            ),
+            "name": row.product_name,
+            "sku": row.product_sku,
+            "quantity": row.quantity,
+            "revenue": str(row.revenue),
+        }
+        for row in top_product_rows
+    ]
+
+    # -------------------------
+    # Daily revenue - last 7 days
+    # -------------------------
+
+    seven_days_ago = today_start - timedelta(days=6)
+
+    daily_rows = (
+        db.session.query(
+            func.date(Sale.created_at).label("date"),
+            func.count(Sale.id).label("orders"),
+            func.coalesce(func.sum(Sale.total), 0).label("revenue"),
+        )
+        .filter(
+            Sale.created_at >= seven_days_ago,
+            Sale.status == "completed",
+        )
+        .group_by(func.date(Sale.created_at))
+        .order_by(func.date(Sale.created_at))
+        .all()
+    )
+
+    daily_sales = [
+        {
+            "date": str(row.date),
+            "orders": row.orders,
+            "revenue": str(row.revenue),
+        }
+        for row in daily_rows
+    ]
+
+    # -------------------------
+    # Recent sales
+    # -------------------------
+
+    recent_sales = (
+        Sale.query
+        .filter(Sale.status == "completed")
+        .order_by(Sale.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    return jsonify({
+        "summary": {
+            "today": {
+                "orders": today_orders,
+                "revenue": str(today_revenue),
+            },
+            "month": {
+                "orders": month_orders,
+                "revenue": str(month_revenue),
+                "average_order_value": str(average_order_value),
+            },
+        },
+
+        "payment_methods": payment_methods,
+
+        "top_products": top_products,
+
+        "daily_sales": daily_sales,
+
+        "recent_sales": [
+            {
+                "id": str(sale.id),
+                "invoice_number": sale.invoice_number,
+                "customer_name": sale.customer_name,
+                "total": str(sale.total),
+                "payment_method": sale.payment_method,
+                "created_at": (
+                    sale.created_at.isoformat()
+                    if sale.created_at
+                    else None
+                ),
+            }
+            for sale in recent_sales
+        ],
+    })

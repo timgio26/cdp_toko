@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {getAuthHeaders} from "./myfunction"
 
 export type Pagination = {
   page: number;
@@ -32,13 +33,7 @@ export type UpdateCategoryDto = {
 
 const categoryQueryKey = ["categories"];
 
-function getAuthHeaders() {
-  const token = sessionStorage.getItem("token");
 
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 /**
  * Get all categories
@@ -370,6 +365,7 @@ export type ProductData = {
   quantity: number;
   unit: string;
   price_per_unit: number;
+  selling_price_per_unit:number;
   category_id: string;
   category_name: string | null;
   suppliers: ProductSupplier[];
@@ -381,6 +377,7 @@ export type CreateProductDto = {
   //   quantity: number;
   unit: string;
   price_per_unit: number;
+  selling_price_per_unit: number;
   category_id: string;
   supplier_ids: string[];
 };
@@ -388,9 +385,10 @@ export type CreateProductDto = {
 export type UpdateProductDto = {
   name?: string;
   sku?: string;
-  quantity?: number;
+  // quantity?: number;
   unit?: string;
   price_per_unit?: number;
+  selling_price_per_unit?:number;
   category_id?: string;
   supplier_ids?: string[];
 };
@@ -763,7 +761,7 @@ export function useCreateStockMovement() {
       });
     },
     onError: (error: any) => {
-      toast(error?.response?.data?.error ?? "Failed to delete product", {
+      toast(error?.response?.data?.error ?? "Failed to create stock movement", {
         type: "error",
       });
     },
@@ -927,7 +925,7 @@ interface DashboardResponse {
 export function useDashboard() {
   const { data, isPending, isError, error, refetch } =
     useQuery<DashboardResponse>({
-      queryKey: ["dashboard"],
+      queryKey: ["dashboard_inventory"],
       queryFn: async () => {
         const resp = await axios.get<DashboardResponse>(
           "/api/dashboard/inventory",

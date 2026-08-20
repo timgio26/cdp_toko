@@ -20,7 +20,7 @@ import { Pagination } from "../../Components/Pagination";
 
 
 
-export function Supplier() {
+export default function Supplier() {
   // const [search, setSearch] = useState("");
 
   const [showModal, setShowModal] = useState(false);

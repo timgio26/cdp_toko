@@ -14,28 +14,18 @@ type ProductModalProps = {
   onClose: () => void;
 };
 
-export function ProductModal({
-  product,
-  onClose,
-}: ProductModalProps) {
+export function ProductModal({ product, onClose }: ProductModalProps) {
   const isEditing = Boolean(product);
-
-  // =========================================================
-  // FORM STATE
-  // =========================================================
-
   const [name, setName] = useState(product?.name ?? "");
   const [sku, setSku] = useState(product?.sku ?? "");
-//   const [quantity, setQuantity] = useState(
-//     product?.quantity?.toString() ?? "",
-//   );
   const [unit, setUnit] = useState(product?.unit ?? "");
   const [pricePerUnit, setPricePerUnit] = useState(
     product?.price_per_unit?.toString() ?? "",
   );
-  const [categoryId, setCategoryId] = useState(
-    product?.category_id ?? "",
+  const [sellingPricePerUnit, setSellingPricePerUnit] = useState(
+    product?.selling_price_per_unit?.toString() ?? "",
   );
+  const [categoryId, setCategoryId] = useState(product?.category_id ?? "");
 
   const [supplierIds, setSupplierIds] = useState<string[]>(
     product?.suppliers.map((supplier) => supplier.id) ?? [],
@@ -55,11 +45,9 @@ export function ProductModal({
   // MUTATIONS
   // =========================================================
 
-  const { createProduct, isPending: isCreating } =
-    useCreateProduct();
+  const { createProduct, isPending: isCreating } = useCreateProduct();
 
-  const { updateProduct, isPending: isUpdating } =
-    useUpdateProduct();
+  const { updateProduct, isPending: isUpdating } = useUpdateProduct();
 
   const isPending = isCreating || isUpdating;
 
@@ -83,9 +71,7 @@ export function ProductModal({
   // SUBMIT
   // =========================================================
 
-  const handleSubmit = (
-    e: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const trimmedName = name.trim();
@@ -102,9 +88,7 @@ export function ProductModal({
     }
 
     if (trimmedName.length > 120) {
-      setError(
-        "Product name must be 120 characters or less.",
-      );
+      setError("Product name must be 120 characters or less.");
       return;
     }
 
@@ -123,13 +107,10 @@ export function ProductModal({
       return;
     }
 
-
     const parsedPrice = Number(pricePerUnit);
+    const parsedSellingPrice = Number(sellingPricePerUnit);
 
-    if (
-      !pricePerUnit ||
-      Number.isNaN(parsedPrice)
-    ) {
+    if (!pricePerUnit || Number.isNaN(parsedPrice)) {
       setError("Price per unit is required.");
       return;
     }
@@ -162,6 +143,7 @@ export function ProductModal({
             price_per_unit: parsedPrice,
             category_id: categoryId,
             supplier_ids: supplierIds,
+            selling_price_per_unit:parsedSellingPrice
           },
         },
         {
@@ -186,6 +168,7 @@ export function ProductModal({
         price_per_unit: parsedPrice,
         category_id: categoryId,
         supplier_ids: supplierIds,
+        selling_price_per_unit:parsedSellingPrice
       },
       {
         onSuccess: () => {
@@ -229,16 +212,8 @@ export function ProductModal({
           </button>
         </div>
 
-        {/* =====================================================
-            FORM
-        ====================================================== */}
-
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-5">
-            {/* =================================================
-                PRODUCT NAME + SKU
-            ================================================== */}
-
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {/* Product Name */}
 
@@ -296,10 +271,6 @@ export function ProductModal({
               </div>
             </div>
 
-            {/* =================================================
-                CATEGORY
-            ================================================== */}
-
             <div>
               <label
                 htmlFor="product-category"
@@ -321,30 +292,14 @@ export function ProductModal({
                 <option value="">Select a category</option>
 
                 {categories.map((category) => (
-                  <option
-                    key={category.id}
-                    value={category.id}
-                  >
+                  <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* =================================================
-                QUANTITY + UNIT
-            ================================================== */}
-
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {/* Quantity */}
-
-
-
-
-
-
-              {/* Unit */}
-
               <div>
                 <label
                   htmlFor="product-unit"
@@ -369,37 +324,74 @@ export function ProductModal({
               </div>
             </div>
 
-            {/* =================================================
-                PRICE
-            ================================================== */}
+            {/* Prices */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {/* Price Per Unit / Cost */}
+              <div>
+                <label
+                  htmlFor="product-price"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  Price Per Unit
+                </label>
 
-            <div>
-              <label
-                htmlFor="product-price"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
-              >
-                Price Per Unit
-              </label>
+                <input
+                  id="product-price"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={pricePerUnit}
+                  onChange={(e) => {
+                    setPricePerUnit(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="e.g. 20000"
+                  disabled={isPending}
+                  className="
+        w-full rounded-lg border border-slate-200
+        px-3 py-2.5 text-sm
+        outline-none transition
+        focus:border-slate-400
+        focus:ring-2 focus:ring-slate-100
+        disabled:cursor-not-allowed
+        disabled:bg-slate-50
+      "
+                />
+              </div>
 
-              <input
-                id="product-price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={pricePerUnit}
-                onChange={(e) => {
-                  setPricePerUnit(e.target.value);
-                  setError("");
-                }}
-                placeholder="e.g. 25.00"
-                disabled={isPending}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:cursor-not-allowed disabled:bg-slate-50"
-              />
+              {/* Selling Price Per Unit */}
+              <div>
+                <label
+                  htmlFor="product-selling-price"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  Selling Price Per Unit
+                </label>
+
+                <input
+                  id="product-selling-price"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={sellingPricePerUnit}
+                  onChange={(e) => {
+                    setSellingPricePerUnit(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="e.g. 25000"
+                  disabled={isPending}
+                  className="
+        w-full rounded-lg border border-slate-200
+        px-3 py-2.5 text-sm
+        outline-none transition
+        focus:border-slate-400
+        focus:ring-2 focus:ring-slate-100
+        disabled:cursor-not-allowed
+        disabled:bg-slate-50
+      "
+                />
+              </div>
             </div>
-
-            {/* =================================================
-                SUPPLIERS
-            ================================================== */}
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -413,9 +405,7 @@ export function ProductModal({
                   </div>
                 ) : (
                   suppliers.map((supplier) => {
-                    const selected = supplierIds.includes(
-                      supplier.id,
-                    );
+                    const selected = supplierIds.includes(supplier.id);
 
                     return (
                       <label
@@ -425,9 +415,7 @@ export function ProductModal({
                         <input
                           type="checkbox"
                           checked={selected}
-                          onChange={() =>
-                            toggleSupplier(supplier.id)
-                          }
+                          onChange={() => toggleSupplier(supplier.id)}
                           disabled={isPending}
                           className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
                         />
@@ -453,16 +441,10 @@ export function ProductModal({
 
             {error && (
               <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2.5">
-                <p className="text-xs text-red-600">
-                  {error}
-                </p>
+                <p className="text-xs text-red-600">{error}</p>
               </div>
             )}
           </div>
-
-          {/* =====================================================
-              ACTIONS
-          ====================================================== */}
 
           <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
             <button
@@ -483,9 +465,7 @@ export function ProductModal({
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               )}
 
-              {isEditing
-                ? "Save Changes"
-                : "Create Product"}
+              {isEditing ? "Save Changes" : "Create Product"}
             </button>
           </div>
         </form>

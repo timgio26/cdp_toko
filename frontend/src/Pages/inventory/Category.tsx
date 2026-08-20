@@ -11,7 +11,7 @@ export type CategoryData = {
   // product_count: number;
 };
 
-export function Category() {
+export default function Category() {
   // const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryData | null>(
