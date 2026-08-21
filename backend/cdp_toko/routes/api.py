@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from uuid import UUID
 from sqlalchemy import or_,func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 import pandas as pd
 from io import BytesIO
 from sqlalchemy import text
@@ -54,38 +54,66 @@ def create_customer():
     db.session.commit()
     return jsonify({'message': 'Customer created','id':new_user.id}), 201
 
-@main_bp.get('/api/customers')
+@main_bp.get("/api/customers")
 @jwt_required()
-def get_all_customer():
-    # Get pagination parameters from query string
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))  # default 20 items per page
-    search = str(request.args.get('search'))
+def get_all_customers():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    search = request.args.get("search", "", type=str).strip()
 
-    # Calculate offset
-    offset = (page - 1) * per_page
-    query = Customer.query.options(joinedload(Customer.addresses))
+    # Basic validation / limits
+    page = max(page, 1)
+    per_page = min(max(per_page, 1), 100)
 
-    # Apply filtering only if search is provided
-    if len(search)>0:
-        query = query.outerjoin(Address).filter(
+    query = Customer.query.options(
+        selectinload(Customer.addresses)
+    )
+
+    # Apply search
+    if search:
+        search_term = f"%{search}%"
+
+        query = query.filter(
             or_(
-                Customer.name.contains(f"%{search}%"),
-                Customer.phone.contains(f"%{search}%"),
-                Address.address.contains(f"%{search}%")
+                Customer.name.ilike(search_term),
+                Customer.phone.ilike(search_term),
+                Customer.email.ilike(search_term),
+                Customer.addresses.any(
+                    Address.address.ilike(search_term)
+                ),
             )
         )
 
+    # Get total before pagination
     total = query.count()
-    customers = query.offset(offset).limit(per_page).all()
-    # customers = Customer.query.offset(offset).limit(per_page).all()
-    # customer:list[Customer] = Customer.query.all()
+
+    # Latest customers first
+    customers = (
+        query
+        .order_by(
+            Customer.joined_date.desc(),
+            Customer.id.desc(),
+        )
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
+    total_pages = (
+        (total + per_page - 1) // per_page
+        if total > 0
+        else 0
+    )
+
     return {
-        "data": [i.to_dict(include_child=True) for i in customers],
+        "data": [
+            customer.to_dict(include_child=True)
+            for customer in customers
+        ],
         "page": page,
         "per_page": per_page,
         "total": total,
-        "total_pages": (total + per_page - 1) // per_page #floor division operator
+        "total_pages": total_pages,
     }, 200
 
 @main_bp.get('/api/customers/<id>')
