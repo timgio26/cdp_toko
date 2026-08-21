@@ -134,12 +134,6 @@ export default function Product() {
 
         {/* =========================================================
     PRODUCTS CONTAINER
-========================================================= */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          {/* =========================================================
-      HEADER
-  ========================================================== */}
-          <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
             <h2 className="font-semibold text-slate-900">All Products</h2>
 
             <p className="mt-1 text-xs text-slate-500">
