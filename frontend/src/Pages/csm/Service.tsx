@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useLocation } from "react-router";
 import { z } from "zod";
-import { formatBeautifulDate } from "../utils/myfunction";
-import { useDeleteService, useGetAddress, useGetServices, type IService } from "../utils/customerQuery";
-import { PageLoading } from "./Index";
-import { NewServiceModalFormGroup } from "../Components/NewServiceModalFormGroup";
-import { ErrorBackToHome } from "../Components/ErrorBackToHome";
-import { PopupModal } from "../Components/PopupModal";
-import { EditServiceForm } from "../Components/EditServiceForm";
+import { formatBeautifulDate } from "../../utils/myfunction";
+import { useDeleteService, useGetAddress, useGetServices, type IService } from "../../utils/customerQuery";
+import { PageLoading } from "../Index";
+import { NewServiceModalFormGroup } from "../../Components/NewServiceModalFormGroup";
+import { ErrorBackToHome } from "../../Components/ErrorBackToHome";
+import { PopupModal } from "../../Components/PopupModal";
+import { EditServiceForm } from "../../Components/EditServiceForm";
 import { CiCircleChevLeft } from "react-icons/ci";
 import { IoIosTrash, IoMdCreate ,IoIosCloseCircleOutline} from "react-icons/io";
-import { Pagination } from "../Components/Pagination";
+import { Pagination } from "../../Components/Pagination";
 
 const ServicePageSchema = z.object({
   key: z.string(),
@@ -20,7 +20,7 @@ const ServicePageSchema = z.object({
   }),
 });
 
-export function Service() {
+export default function Service() {
   const location = useLocation();
   const { data, success } = ServicePageSchema.safeParse(location);
   const { mutate: deleteService, isPending } = useDeleteService();

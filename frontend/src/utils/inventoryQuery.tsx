@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {getAuthHeaders} from "./myfunction"
 
 export type Pagination = {
   page: number;
@@ -32,13 +33,7 @@ export type UpdateCategoryDto = {
 
 const categoryQueryKey = ["categories"];
 
-function getAuthHeaders() {
-  const token = sessionStorage.getItem("token");
 
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 /**
  * Get all categories
@@ -370,6 +365,7 @@ export type ProductData = {
   quantity: number;
   unit: string;
   price_per_unit: number;
+  selling_price_per_unit:number;
   category_id: string;
   category_name: string | null;
   suppliers: ProductSupplier[];
@@ -381,6 +377,7 @@ export type CreateProductDto = {
   //   quantity: number;
   unit: string;
   price_per_unit: number;
+  selling_price_per_unit: number;
   category_id: string;
   supplier_ids: string[];
 };
@@ -388,9 +385,10 @@ export type CreateProductDto = {
 export type UpdateProductDto = {
   name?: string;
   sku?: string;
-  quantity?: number;
+  // quantity?: number;
   unit?: string;
   price_per_unit?: number;
+  selling_price_per_unit?:number;
   category_id?: string;
   supplier_ids?: string[];
 };
@@ -618,28 +616,81 @@ export interface StockMovement {
   can_delete: boolean;
 }
 
+
 interface StockMovementsResponse {
   data: StockMovement[];
+  pagination: Pagination;
 }
 
-export function useStockMovements() {
-  const { data, isPending, isError, error } = useQuery<StockMovementsResponse>({
-    queryKey: ["stock-movements"],
+export interface StockMovementsParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  product_id?: string;
+  movement_type?: "inbound" | "outbound";
+  date_from?: string;
+  date_to?: string;
+}
 
-    queryFn: async () => {
-      const resp = await axios.get<StockMovementsResponse>(
-        "/api/stock-movements/",
+export function useStockMovements(
+  params: StockMovementsParams = {},
+) {
+  const {
+    page = 1,
+    per_page = 20,
+    search = "",
+    product_id,
+    movement_type,
+    date_from,
+    date_to,
+  } = params;
+
+  const { data, isPending, isError, error } =
+    useQuery<StockMovementsResponse>({
+      queryKey: [
+        "stock-movements",
         {
-          headers: getAuthHeaders(),
+          page,
+          per_page,
+          search,
+          product_id,
+          movement_type,
+          date_from,
+          date_to,
         },
-      );
+      ],
 
-      return resp.data;
-    },
-  });
+      queryFn: async () => {
+        const resp = await axios.get<StockMovementsResponse>(
+          "/api/stock-movements/",
+          {
+            headers: getAuthHeaders(),
+            params: {
+              page,
+              per_page,
+              search: search || undefined,
+              product_id: product_id || undefined,
+              movement_type: movement_type || undefined,
+              date_from: date_from || undefined,
+              date_to: date_to || undefined,
+            },
+          },
+        );
+
+        return resp.data;
+      },
+    });
 
   return {
     stockMovements: data?.data ?? [],
+    pagination: data?.pagination ?? {
+      page: 1,
+      per_page,
+      total: 0,
+      pages: 0,
+      has_next: false,
+      has_prev: false,
+    },
     isPending,
     isError,
     error,
@@ -683,6 +734,7 @@ export interface CreateStockMovementData {
   product_id: string;
   quantity_change: number;
   reason: string;
+  created_at: string;
 }
 
 export function useCreateStockMovement() {
@@ -709,7 +761,7 @@ export function useCreateStockMovement() {
       });
     },
     onError: (error: any) => {
-      toast(error?.response?.data?.error ?? "Failed to delete product", {
+      toast(error?.response?.data?.error ?? "Failed to create stock movement", {
         type: "error",
       });
     },
@@ -720,5 +772,177 @@ export function useCreateStockMovement() {
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
+  };
+}
+
+export interface UpdateStockMovementData {
+  quantity_change: number;
+  reason: string;
+}
+
+export function useUpdateStockMovement() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateStockMovementData;
+    }) => {
+      const resp = await axios.put(
+        `/api/stock-movements/${id}`,
+        data,
+        {
+          headers: getAuthHeaders(),
+        },
+      );
+
+      return resp.data;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["stock-movements"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+      });
+      toast("Stock movement updated successfully", {
+        type: "success",
+      });
+    },
+
+    onError: (error: any) => {
+      toast(
+        error?.response?.data?.error ?? "Failed to update stock movement",
+        {
+          type: "error",
+        },
+      );
+    },
+  });
+
+  return {
+    updateStockMovement: mutation.mutate,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error,
+  };
+}
+
+
+
+
+export interface DashboardProduct {
+  id: string;
+  name: string;
+  sku: string;
+  quantity: number;
+  unit: string;
+  price_per_unit: number;
+  inventory_value: number;
+  category_id: string;
+  category_name: string | null;
+  supplier_count: number;
+}
+
+export interface DashboardCategory {
+  category: string;
+  product_count: number;
+  quantity: number;
+  inventory_value: number;
+}
+
+export interface DashboardActivity {
+  date: string;
+  inbound: number;
+  outbound: number;
+}
+
+export interface DashboardActiveProduct {
+  product_id: string;
+  product_name: string;
+  product_sku: string;
+  movements: number;
+  inbound: number;
+  outbound: number;
+}
+
+export interface DashboardMovement {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_sku: string;
+  quantity_before: number;
+  quantity_change: number;
+  quantity_after: number;
+  reason: string;
+  created_at: string;
+  can_edit: boolean;
+  can_delete: boolean;
+}
+
+export interface DashboardData {
+  summary: {
+    total_products: number;
+    total_stock_units: number;
+    inventory_value: number;
+    out_of_stock: number;
+    products_without_supplier: number;
+  };
+
+  movement_summary: {
+    period_days: number;
+    inbound_units: number;
+    outbound_units: number;
+    net_change: number;
+    movement_count: number;
+  };
+
+  daily_activity: DashboardActivity[];
+
+  category_value: DashboardCategory[];
+
+  top_products: DashboardProduct[];
+
+  most_active_products: DashboardActiveProduct[];
+
+  attention: {
+    out_of_stock: DashboardProduct[];
+    products_without_supplier: DashboardProduct[];
+  };
+
+  recent_movements: DashboardMovement[];
+}
+
+interface DashboardResponse {
+  data: DashboardData;
+}
+
+export function useDashboard() {
+  const { data, isPending, isError, error, refetch } =
+    useQuery<DashboardResponse>({
+      queryKey: ["dashboard_inventory"],
+      queryFn: async () => {
+        const resp = await axios.get<DashboardResponse>(
+          "/api/dashboard/inventory",
+          {
+            headers: getAuthHeaders(),
+          },
+        );
+
+        return resp.data;
+      },
+    });
+
+  return {
+    dashboard: data?.data ?? null,
+    isPending,
+    isError,
+    error,
+    refetch,
   };
 }

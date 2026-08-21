@@ -34,6 +34,7 @@ def create_product():
     unit = data.get("unit", "").strip()
     # quantity = data.get("quantity", 0)
     price_per_unit = data.get("price_per_unit", 0)
+    selling_price_per_unit = data.get("selling_price_per_unit", 0)
     category_id = data.get("category_id")
     supplier_ids = data.get("supplier_ids", [])
 
@@ -85,21 +86,6 @@ def create_product():
             "error": "Category ID must be a valid UUID."
         }), 400
 
-    # -------------------------
-    # Validate quantity
-    # -------------------------
-
-    # try:
-    #     quantity = int(quantity)
-    # except (TypeError, ValueError):
-    #     return jsonify({
-    #         "error": "Quantity must be a valid number."
-    #     }), 400
-
-    # if quantity < 0:
-    #     return jsonify({
-    #         "error": "Quantity cannot be negative."
-    #     }), 400
 
     # -------------------------
     # Validate price
@@ -107,6 +93,18 @@ def create_product():
 
     try:
         price_per_unit = Decimal(str(price_per_unit))
+    except (InvalidOperation, TypeError, ValueError):
+        return jsonify({
+            "error": "Price per unit must be a valid number."
+        }), 400
+
+    if price_per_unit < 0:
+        return jsonify({
+            "error": "Price per unit cannot be negative."
+        }), 400
+
+    try:
+        selling_price_per_unit = Decimal(str(selling_price_per_unit))
     except (InvalidOperation, TypeError, ValueError):
         return jsonify({
             "error": "Price per unit must be a valid number."
@@ -150,6 +148,7 @@ def create_product():
         sku=sku,
         # quantity=quantity,
         unit=unit,
+        selling_price_per_unit=selling_price_per_unit,
         price_per_unit=price_per_unit,
         category_id=category_id,
         suppliers=suppliers,
@@ -269,24 +268,6 @@ def update_product(id):
 
         product.sku = sku
 
-    # -------------------------
-    # Quantity
-    # -------------------------
-
-    # if "quantity" in data:
-    #     try:
-    #         quantity = int(data["quantity"])
-    #     except (TypeError, ValueError):
-    #         return jsonify({
-    #             "error": "Quantity must be a valid number."
-    #         }), 400
-
-    #     if quantity < 0:
-    #         return jsonify({
-    #             "error": "Quantity cannot be negative."
-    #         }), 400
-
-    #     product.quantity = quantity
 
     # -------------------------
     # Unit
@@ -322,6 +303,27 @@ def update_product(id):
             }), 400
 
         product.price_per_unit = price_per_unit
+
+        # -------------------------
+    # Price
+    # -------------------------
+
+    if "selling_price_per_unit" in data:
+        try:
+            selling_price_per_unit = Decimal(
+                str(data["selling_price_per_unit"])
+            )
+        except (InvalidOperation, TypeError, ValueError):
+            return jsonify({
+                "error": "Price per unit must be a valid number."
+            }), 400
+
+        if selling_price_per_unit < 0:
+            return jsonify({
+                "error": "Price per unit cannot be negative."
+            }), 400
+
+        product.selling_price_per_unit = selling_price_per_unit
 
     # -------------------------
     # Category
