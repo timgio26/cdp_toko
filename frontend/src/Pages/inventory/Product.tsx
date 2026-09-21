@@ -6,7 +6,7 @@ import {
   FiSearch,
   FiTag,
   FiTrash2,
-  FiUsers,
+  FiUsers,FiLoader,FiDownload
 } from "react-icons/fi";
 
 import {
@@ -19,7 +19,7 @@ import { ProductModal } from "./ProductModal";
 import { DeleteConfirmModal } from "../../Components/DeleteConfirmModal";
 import { Pagination } from "../../Components/Pagination";
 import { useDebounce } from "../../utils/utilsHook";
-import { formatRupiah } from "../../utils/myfunction";
+import { formatRupiah,downloadData } from "../../utils/myfunction";
 
 export default function Product() {
   const [search, setSearch] = useState("");
@@ -30,6 +30,7 @@ export default function Product() {
   const [productToDelete, setProductToDelete] = useState<ProductData | null>(
     null,
   );
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
@@ -72,6 +73,12 @@ export default function Product() {
     });
   };
 
+    async function handleDownload() {
+      setIsDownloading(true);
+      await downloadData("/api/products/export","products");
+      setIsDownloading(false);
+    }
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -93,8 +100,40 @@ export default function Product() {
               Manage your products, stock, pricing, and suppliers.
             </p>
           </div>
-
+          <div className="flex flex-col gap-2 sm:flex-row">
           <button
+            type="button"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="
+    inline-flex items-center justify-center gap-2
+    rounded-lg
+    border border-slate-200
+    bg-white
+    px-4 py-2.5
+    text-sm font-semibold text-slate-700
+    transition
+    hover:bg-slate-50
+    focus:outline-none
+    focus:ring-4
+    focus:ring-slate-100
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+  "
+          >
+            {isDownloading ? (
+              <>
+                <FiLoader size={17} className="animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FiDownload size={17} />
+                Export Excel
+              </>
+            )}
+          </button>
+                      <button
             type="button"
             onClick={openCreate}
             className="flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
@@ -102,6 +141,9 @@ export default function Product() {
             <FiPlus size={17} />
             Add Product
           </button>
+          </div>
+
+
         </div>
 
         {/* =====================================================
@@ -132,14 +174,19 @@ export default function Product() {
             PRODUCT TABLE
         ====================================================== */}
 
-        {/* =========================================================
-    PRODUCTS CONTAINER
-            <h2 className="font-semibold text-slate-900">All Products</h2>
 
-            <p className="mt-1 text-xs text-slate-500">
-              {pagination?.total} products
-            </p>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          {/* Table header */}
+          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div>
+              <h2 className="font-semibold text-slate-900">All Products</h2>
+
+              <p className="mt-1 text-xs text-slate-500">
+                {pagination?.total} products
+              </p>
+            </div>
           </div>
+          {/* </div> */}
 
           {/* =========================================================
       DESKTOP TABLE

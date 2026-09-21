@@ -1,10 +1,11 @@
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request,send_file
 from flask_jwt_extended import jwt_required
 from sqlalchemy import or_
-
+import pandas as pd
+from io import BytesIO
 from cdp_toko.extension import db
 from cdp_toko.models.inventory import (
     Product,
@@ -404,3 +405,59 @@ def delete_product(id):
     return jsonify({
         "message": "Product deleted"
     }), 200
+
+@products_bp.get("/export")
+@jwt_required()
+def export_products():
+    products = (
+        db.session.query(Product)
+        .order_by(Product.name.asc())
+        .all()
+    )
+
+    rows = []
+
+    for product in products:
+        rows.append({
+            "Name": product.name,
+            "SKU": product.sku,
+            "Unit": product.unit,
+            "Quantity": product.quantity,
+
+            "Cost Price": product.price_per_unit,
+            "Selling Price": product.selling_price_per_unit,
+
+            "Category": (
+                product.category.name
+                if product.category
+                else None
+            ),
+
+            "Suppliers": ", ".join(
+                supplier.name
+                for supplier in product.suppliers
+            ),
+        })
+
+    df = pd.DataFrame(rows)
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(
+            writer,
+            index=False,
+            sheet_name="Products",
+        )
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="products.xlsx",
+        mimetype=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+    )
